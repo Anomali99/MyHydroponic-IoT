@@ -22,7 +22,7 @@ void MainTank::setup()
     pinMode(_pinMixer, OUTPUT);
 }
 
-void MainTank::mix()
+void MainTank::activeMixer()
 {
     digitalWrite(_pinMixer, HIGH);
     delay(3000);
@@ -34,6 +34,17 @@ float MainTank::getLevelCm()
 {
     float distance = _levelSensor.getDistanceCm();
     float level = _tankHeight - distance;
+
+    if (level < _minLevel)
+    {
+        digitalWrite(_pinValve, HIGH);
+        while (level >= _maxLevel)
+        {
+            distance = _levelSensor.getDistanceCm();
+            level = _tankHeight - distance;
+        }
+        digitalWrite(_pinValve, LOW);
+    }
 
     return level;
 }

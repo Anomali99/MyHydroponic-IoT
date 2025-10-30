@@ -21,6 +21,6 @@ public:
         float minLevel,
         float maxLevel);
     void setup();
-    void mix();
+    void activeMixer();
     float getLevelCm();
 };
