@@ -7,13 +7,13 @@ PHCorrector::PHCorrector(
     byte pinEchoPhDownLevel,
     byte pinPumpPhUp,
     byte pinPumpPhDown,
-    float maxLevelPhUp,
-    float maxLevelPhDown) : _levelPhUpSensor(UltrasonicSensor(pinTrigPhUpLevel, pinEchoPhUpLevel)),
-                            _levelPhDownSensor(UltrasonicSensor(pinTrigPhDownLevel, pinEchoPhDownLevel)),
-                            _maxLevelPhUp(pinPumpPhUp),
-                            _maxLevelPhDown(pinPumpPhDown),
-                            _pinPumpPhUp(maxLevelPhUp),
-                            _pinPumpPhDown(maxLevelPhDown) {}
+    float phUpTankHeight,
+    float phDownTankHeight) : _levelPhUpSensor(UltrasonicSensor(pinTrigPhUpLevel, pinEchoPhUpLevel)),
+                              _levelPhDownSensor(UltrasonicSensor(pinTrigPhDownLevel, pinEchoPhDownLevel)),
+                              _pinPumpPhUp(pinPumpPhUp),
+                              _pinPumpPhDown(pinPumpPhDown),
+                              _phUpTankHeight(phUpTankHeight),
+                              _phDownTankHeight(phDownTankHeight) {}
 
 void PHCorrector::setup()
 {
@@ -40,7 +40,7 @@ void PHCorrector::activePhDownPump(float duration)
 float PHCorrector::getPhUpLevelCm()
 {
     float distance = _levelPhUpSensor.getDistanceCm();
-    float level = _maxLevelPhUp - distance;
+    float level = _phUpTankHeight - distance;
 
     return level;
 }
@@ -48,7 +48,7 @@ float PHCorrector::getPhUpLevelCm()
 float PHCorrector::getPhDownLevelCm()
 {
     float distance = _levelPhDownSensor.getDistanceCm();
-    float level = _maxLevelPhDown - distance;
+    float level = _pinPumpPhDown - distance;
 
     return level;
 }

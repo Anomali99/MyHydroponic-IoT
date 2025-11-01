@@ -14,12 +14,13 @@ private:
     PubSubClient _mqttClient;
     const char *_broker;
     int _port;
+    unsigned long _lastConnectionCheck;
     String _clientId;
     std::vector<String> _topicsToSubscribe;
     void callback(char *topic, byte *payload, unsigned int length);
 
 public:
-    std::function<void(String, String)> onMessageReceived;
+    std::function<void(String, String)> messageReceivedCallback;
     std::function<void(bool)> statusCallback;
     MQTTManagement(
         NetworkManagement &connection,

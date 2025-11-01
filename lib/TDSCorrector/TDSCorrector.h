@@ -6,8 +6,8 @@ class TDSCorrector
 private:
     UltrasonicSensor _levelASensor;
     UltrasonicSensor _levelBSensor;
-    float _maxLevelA;
-    float _maxLevelB;
+    float _ATankHeight;
+    float _BTankHeight;
     byte _pinPump;
 
 public:
@@ -17,8 +17,8 @@ public:
         byte pinTrigBLevel,
         byte pinEchoBLevel,
         byte pinPump,
-        float maxLevelA,
-        float maxLevelB);
+        float ATankHeight,
+        float BTankHeight);
     void setup();
     void activePump(float duration);
     float getALevelCm();

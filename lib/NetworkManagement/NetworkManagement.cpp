@@ -1,27 +1,54 @@
 #include "NetworkManagement.h"
 
-NetworkManagement::NetworkManagement() {}
+NetworkManagement::NetworkManagement(
+    const char *NTP_SERVER,
+    const long GMTOFFSET,
+    const int DAYLIGHTOFFSET_SEC) : NTP_SERVER(NTP_SERVER),
+                                    GMTOFFSET_SEC(GMTOFFSET * 3600),
+                                    DAYLIGHTOFFSET_SEC(DAYLIGHTOFFSET_SEC)
+{
+    _lastConnectionCheck = 0;
+    statusCallback = nullptr;
+    statusInternetCallback = nullptr;
+}
 
 void NetworkManagement::setup(const char *ssid, const char *pass)
 {
     WiFi.begin(ssid, pass);
+
+    if (statusCallback)
+        statusCallback(false);
+
+    if (statusInternetCallback)
+        statusInternetCallback(false);
 }
 
 void NetworkManagement::loop()
 {
-    if (!isConnected())
+    static unsigned long lastReconnectAttempt = 0;
+    unsigned long now = millis();
+    if (now - _lastConnectionCheck > 5000)
     {
-        static unsigned long lastReconnectAttempt = 0;
-        if (millis() - lastReconnectAttempt < 5000)
+        _lastConnectionCheck = now;
+        if (!isConnected())
         {
             if (statusCallback)
-            {
                 statusCallback(false);
-            }
-            return;
+            reconnect();
         }
-        lastReconnectAttempt = millis();
-        reconnect();
+        else
+            checkInternetConnection();
+    }
+    lastReconnectAttempt = millis();
+}
+
+void NetworkManagement::checkInternetConnection()
+{
+    IPAddress result;
+    bool currentInternetState = (WiFi.hostByName("google.com", result) == 1);
+    if (statusInternetCallback)
+    {
+        statusInternetCallback(currentInternetState);
     }
 }
 
@@ -32,13 +59,15 @@ void NetworkManagement::reconnect()
         if (statusCallback)
         {
             statusCallback(true);
+            checkInternetConnection();
         }
     }
     else
     {
         if (statusCallback)
         {
-            statusCallback(true);
+            statusCallback(false);
+            statusInternetCallback(false);
         }
     }
 }
@@ -51,4 +80,19 @@ bool NetworkManagement::isConnected()
 WiFiClient &NetworkManagement::getClient()
 {
     return _wifiClient;
+}
+
+String NetworkManagement::getCurrentTime(const char *format)
+{
+    configTime(GMTOFFSET_SEC, DAYLIGHTOFFSET_SEC, NTP_SERVER);
+
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo))
+    {
+        char timeString[64];
+        strftime(timeString, sizeof(timeString), format, &timeinfo);
+        return String(timeString);
+    }
+    else
+        return "null";
 }

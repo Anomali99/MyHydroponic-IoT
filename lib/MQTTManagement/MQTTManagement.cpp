@@ -12,7 +12,9 @@ MQTTManagement::MQTTManagement(
 {
     _clientId = "ESP32Client-";
     _clientId += String(random(0xffff), HEX);
-    onMessageReceived = nullptr;
+    _lastConnectionCheck = 0;
+    messageReceivedCallback = nullptr;
+    statusCallback = nullptr;
 }
 
 void MQTTManagement::setup()
@@ -31,28 +33,25 @@ void MQTTManagement::callback(char *topic, byte *payload, unsigned int length)
     String strTopic = String(topic);
     String strMessage = String(message);
 
-    if (onMessageReceived)
-    {
-        onMessageReceived(strTopic, strMessage);
-    }
+    if (messageReceivedCallback)
+        messageReceivedCallback(strTopic, strMessage);
 }
 
 void MQTTManagement::loop()
 {
-    if (!_mqttClient.connected())
+    static unsigned long lastReconnectAttempt = 0;
+    unsigned long now = millis();
+    if (now - _lastConnectionCheck > 5000)
     {
-        static unsigned long lastReconnectAttempt = 0;
-        if (millis() - lastReconnectAttempt < 5000)
+        _lastConnectionCheck = now;
+        if (!_mqttClient.connected())
         {
             if (statusCallback)
-            {
                 statusCallback(false);
-            }
-            return;
+            reconnect();
         }
-        lastReconnectAttempt = millis();
-        reconnect();
     }
+
     _mqttClient.loop();
 }
 
@@ -61,52 +60,38 @@ void MQTTManagement::reconnect()
     if (!_connection.isConnected())
     {
         if (statusCallback)
-        {
             statusCallback(false);
-        }
         return;
     }
 
     if (_mqttClient.connect(_clientId.c_str()))
     {
         if (statusCallback)
-        {
             statusCallback(true);
-        }
+
         for (const String &topic : _topicsToSubscribe)
-        {
             subscribe(topic.c_str());
-        }
     }
     else
     {
         if (statusCallback)
-        {
             statusCallback(false);
-        }
     }
 }
 
 bool MQTTManagement::publish(const char *topic, const char *payload)
 {
     if (_mqttClient.connected())
-    {
         return _mqttClient.publish(topic, payload);
-    }
+
     else
-    {
         return false;
-    }
 }
 
 bool MQTTManagement::subscribe(const char *topic)
 {
     if (_mqttClient.connected())
-    {
         return _mqttClient.subscribe(topic);
-    }
     else
-    {
         return false;
-    }
 }

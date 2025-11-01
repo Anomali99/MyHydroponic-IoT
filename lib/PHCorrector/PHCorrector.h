@@ -6,10 +6,10 @@ class PHCorrector
 private:
     UltrasonicSensor _levelPhUpSensor;
     UltrasonicSensor _levelPhDownSensor;
-    float _maxLevelPhUp;
-    float _maxLevelPhDown;
     byte _pinPumpPhUp;
     byte _pinPumpPhDown;
+    float _phUpTankHeight;
+    float _phDownTankHeight;
 
 public:
     PHCorrector(
@@ -19,8 +19,8 @@ public:
         byte pinEchoPhDownLevel,
         byte pinPumpPhUp,
         byte pinPumpPhDown,
-        float maxLevelPhUp,
-        float maxLevelPhDown);
+        float phUpTankHeight,
+        float phDownTankHeight);
     void setup();
     void activePhUpPump(float duration);
     void activePhDownPump(float duration);

@@ -6,12 +6,12 @@ TDSCorrector::TDSCorrector(
     byte pinTrigBLevel,
     byte pinEchoBLevel,
     byte pinPump,
-    float maxLevelA,
-    float maxLevelB) : _levelASensor(UltrasonicSensor(pinTrigALevel, pinEchoALevel)),
-                       _levelBSensor(UltrasonicSensor(pinTrigBLevel, pinEchoBLevel)),
-                       _pinPump(pinPump),
-                       _maxLevelA(maxLevelA),
-                       _maxLevelB(maxLevelB)
+    float ATankHeight,
+    float BTankHeight) : _levelASensor(UltrasonicSensor(pinTrigALevel, pinEchoALevel)),
+                         _levelBSensor(UltrasonicSensor(pinTrigBLevel, pinEchoBLevel)),
+                         _pinPump(pinPump),
+                         _ATankHeight(ATankHeight),
+                         _BTankHeight(BTankHeight)
 {
 }
 
@@ -32,7 +32,7 @@ void TDSCorrector::activePump(float duration)
 float TDSCorrector::getALevelCm()
 {
     float distance = _levelASensor.getDistanceCm();
-    float level = _maxLevelA - distance;
+    float level = _ATankHeight - distance;
 
     return level;
 }
@@ -40,7 +40,7 @@ float TDSCorrector::getALevelCm()
 float TDSCorrector::getBLevelCm()
 {
     float distance = _levelBSensor.getDistanceCm();
-    float level = _maxLevelB - distance;
+    float level = _BTankHeight - distance;
 
     return level;
 }
