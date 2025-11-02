@@ -96,3 +96,23 @@ String NetworkManagement::getCurrentTime(const char *format)
     else
         return "null";
 }
+
+void NetworkManagement::getHttpRequest(String url)
+{
+    if (!isConnected())
+        return;
+
+    HTTPClient http;
+    http.begin(url);
+    int httpCode = http.GET();
+
+    if (httpCode > 0)
+    {
+        if (httpCode == HTTP_CODE_OK)
+        {
+            String payload = http.getString();
+        }
+    }
+
+    http.end();
+}

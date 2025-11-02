@@ -55,3 +55,4 @@ float BTankHeight = 40.0;
 #define PC_BTN_ADD_PH_UP_PIN 12
 #define PC_BTN_ADD_PH_DOWN_PIN 12
 #define PC_BTN_ADD_NUTRITION_PIN 12
+float durationAtivatePump = 1.0;

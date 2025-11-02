@@ -66,59 +66,115 @@ void PhysicalControl::loop()
 void PhysicalControl::_messageHandle(String topic, String payload)
 {
     if (topic == "environment/refresh")
-        _MQTTRefreshEnvHandle(payload);
+        _refreshEnvHandle(payload);
+
     else if (topic == "pump/automation")
-        _MQTTPumpAutoHandle(payload);
+        _activatePumpHandle(payload);
+
     else if (topic == "pump/manually")
-        _MQTTPumpManuallyHandle(payload);
+        _activatePumpHandle(payload);
 }
 
 void PhysicalControl::_WifiStatusHandle(bool status)
 {
     if (status)
-    {
         digitalWrite(PC_LED_WIFI_PIN, HIGH);
-    }
+
     else
-    {
         digitalWrite(PC_LED_WIFI_PIN, LOW);
-    }
 }
 
 void PhysicalControl::_iternetStatusHandle(bool status)
 {
     if (status)
-    {
         digitalWrite(PC_LED_INTERNET_PIN, HIGH);
-    }
+
     else
-    {
         digitalWrite(PC_LED_INTERNET_PIN, LOW);
-    }
 }
 
 void PhysicalControl::_MQTTStatusHandle(bool status)
 {
     if (status)
-    {
         digitalWrite(PC_LED_MQTT_PIN, HIGH);
-    }
+
     else
-    {
         digitalWrite(PC_LED_MQTT_PIN, LOW);
+}
+
+void PhysicalControl::_refreshEnvHandle(String payload)
+{
+    DynamicJsonDocument doc(1024);
+    DeserializationError error = deserializeJson(doc, payload);
+
+    if (error)
+        return;
+
+    if (doc.containsKey("url"))
+    {
+        JsonVariant urlVariant = doc["url"];
+
+        if (urlVariant.is<const char *>())
+        {
+            String url = urlVariant.as<String>();
+            _networkManagement.getHttpRequest(url);
+        }
+    }
+
+    if (doc.containsKey("status"))
+    {
+        bool status = doc["status"].as<bool>();
+
+        if (status)
+            _readEnvronmentHandle();
     }
 }
 
-void PhysicalControl::_MQTTRefreshEnvHandle(String pyload) {}
+void PhysicalControl::_activatePumpHandle(String payload)
+{
+    DynamicJsonDocument doc(1024);
+    DeserializationError error = deserializeJson(doc, payload);
 
-void PhysicalControl::_MQTTPumpAutoHandle(String pyload) {}
+    if (error)
+        return;
 
-void PhysicalControl::_MQTTPumpManuallyHandle(String pyload) {}
+    if (doc.containsKey("pump") && doc.containsKey("duration"))
+    {
+        String pump = doc["pump"].as<String>();
+        float duration = doc["duration"].as<float>();
 
-void PhysicalControl::_readEnvironmentHandle() {}
+        if (pump == "NUTRITION")
+            _TDSCorrector.activePump(duration);
 
-void PhysicalControl::_activateNutrientPump(float duration) {}
+        else if (pump == "PH_UP")
+            _PHCorrector.activePhUpPump(duration);
 
-void PhysicalControl::_activatePhUpPump(float duration) {}
+        else if (pump == "PH_DOWN")
+            _PHCorrector.activePhDownPump(duration);
+    }
+}
 
-void PhysicalControl::_activatePhDownPump(float duration) {}
+void PhysicalControl::_readEnvronmentHandle()
+{
+    float mainTankLevel = _mainTank.getLevelCm();
+    float phUpLevel = _PHCorrector.getPhUpLevelCm();
+    float phDownLevel = _PHCorrector.getPhDownLevelCm();
+    float nutrientALevel = _TDSCorrector.getALevelCm();
+    float nutrientBLevel = _TDSCorrector.getBLevelCm();
+    String datetime = _networkManagement.getCurrentTime();
+
+    StaticJsonDocument<200> json;
+
+    json["ph"] = 6.8;
+    json["tds"] = 800;
+    json["tank_a"] = nutrientALevel;
+    json["tank_b"] = nutrientBLevel;
+    json["tank_ph_up"] = phUpLevel;
+    json["tank_down_up"] = phDownLevel;
+    json["tank_main"] = mainTankLevel;
+    json["datetime"] = datetime;
+
+    char buffer[200];
+    serializeJson(json, buffer);
+    _MQTTManagement.publish("environment/data", buffer);
+}

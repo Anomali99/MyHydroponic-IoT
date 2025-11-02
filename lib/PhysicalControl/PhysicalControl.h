@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <WiFi.h>
 #include <functional>
 #include <vector>
@@ -27,13 +28,9 @@ private:
     void _WifiStatusHandle(bool status);
     void _iternetStatusHandle(bool status);
     void _MQTTStatusHandle(bool status);
-    void _MQTTRefreshEnvHandle(String payload);
-    void _MQTTPumpAutoHandle(String payload);
-    void _MQTTPumpManuallyHandle(String payload);
-    void _readEnvironmentHandle();
-    void _activateNutrientPump(float duration);
-    void _activatePhUpPump(float duration);
-    void _activatePhDownPump(float duration);
+    void _refreshEnvHandle(String payload);
+    void _activatePumpHandle(String payload);
+    void _readEnvronmentHandle();
 
 public:
     PhysicalControl();

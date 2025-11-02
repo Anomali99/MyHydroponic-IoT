@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 
 class NetworkManagement
 {
@@ -26,4 +27,5 @@ public:
     bool isConnected();
     WiFiClient &getClient();
     String getCurrentTime(const char *format = "%Y-%m-%d %H:%M:%S");
+    void getHttpRequest(String url);
 };
