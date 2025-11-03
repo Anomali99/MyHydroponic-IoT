@@ -10,6 +10,7 @@
 #include "NetworkManagement.h"
 #include "MQTTManagement.h"
 #include "MainTank.h"
+#include "MeasuringTank.h"
 #include "PHCorrector.h"
 #include "TDSCorrector.h"
 
@@ -21,6 +22,7 @@ private:
     NetworkManagement _networkManagement;
     MQTTManagement _MQTTManagement;
     MainTank _mainTank;
+    MeasuringTank _measuringTank;
     PHCorrector _PHCorrector;
     TDSCorrector _TDSCorrector;
     std::vector<String> _topics;

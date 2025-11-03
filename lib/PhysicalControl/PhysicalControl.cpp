@@ -6,6 +6,7 @@ PhysicalControl::PhysicalControl() : _lastHeartbeatToggle(0),
                                      _networkManagement(NTP_SERVER, GMTOFFSET),
                                      _MQTTManagement(_networkManagement, MQTT_BROKER, MQTT_PORT, _topics),
                                      _mainTank(MT_US_TRIG_PIN, MT_US_ECHO_PIN, MT_VALVE_PIN, MT_MIXER_PIN, tankHeight, minLevel, maxLevel),
+                                     _measuringTank(MeT_PH_PIN, MeT_TDS_PIN, MeT_VALVE_PIN, MeT_PUMP_PIN),
                                      _PHCorrector(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN, PH_DOWN_US_TRIG_PIN, PH_DOWN_US_ECHO_PIN, PH_UP_PUMP_PIN, PH_DOWN_PUMP_PIN, phUpTankHeight, phDownTankHeight),
                                      _TDSCorrector(TDS_A_US_TRIG_PIN, TDS_A_US_ECHO_PIN, TDS_B_US_TRIG_PIN, TDS_B_US_ECHO_PIN, TDS_TDS_PUMP_PIN, ATankHeight, BTankHeight)
 {
@@ -161,12 +162,13 @@ void PhysicalControl::_readEnvronmentHandle()
     float phDownLevel = _PHCorrector.getPhDownLevelCm();
     float nutrientALevel = _TDSCorrector.getALevelCm();
     float nutrientBLevel = _TDSCorrector.getBLevelCm();
+    EnvironmentData env = _measuringTank.readData();
     String datetime = _networkManagement.getCurrentTime();
 
     StaticJsonDocument<200> json;
 
-    json["ph"] = 6.8;
-    json["tds"] = 800;
+    json["ph"] = env.ph;
+    json["tds"] = env.tds;
     json["tank_a"] = nutrientALevel;
     json["tank_b"] = nutrientBLevel;
     json["tank_ph_up"] = phUpLevel;
