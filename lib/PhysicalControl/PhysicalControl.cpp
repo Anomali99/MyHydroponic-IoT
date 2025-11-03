@@ -2,6 +2,7 @@
 
 PhysicalControl::PhysicalControl() : _lastHeartbeatToggle(0),
                                      _heartbeatLedState(LOW),
+                                     _display(0x27),
                                      _topics({"environment/refresh", "pump/automation", "pump/manually"}),
                                      _networkManagement(NTP_SERVER, GMTOFFSET),
                                      _MQTTManagement(_networkManagement, MQTT_BROKER, MQTT_PORT, _topics),
@@ -41,9 +42,11 @@ void PhysicalControl::setup()
     pinMode(PC_LED_ADD_EVENT_PIN, OUTPUT);
     pinMode(PC_BUZZER_PIN, OUTPUT);
 
+    _display.setup();
     _networkManagement.setup(WIFI_SSID, WIFI_PASS);
     _MQTTManagement.setup();
     _mainTank.setup();
+    _measuringTank.setup();
     _PHCorrector.setup();
     _TDSCorrector.setup();
 }
@@ -166,7 +169,6 @@ void PhysicalControl::_readEnvronmentHandle()
     String datetime = _networkManagement.getCurrentTime();
 
     StaticJsonDocument<200> json;
-
     json["ph"] = env.ph;
     json["tds"] = env.tds;
     json["tank_a"] = nutrientALevel;
@@ -179,4 +181,16 @@ void PhysicalControl::_readEnvronmentHandle()
     char buffer[200];
     serializeJson(json, buffer);
     _MQTTManagement.publish("environment/data", buffer);
+
+    DisplayData data;
+    data.ph = env.ph;
+    data.tds = env.tds;
+    data.mainTankLevel = mainTankLevel;
+    data.nutrientALevel = nutrientALevel;
+    data.nutrientBLevel = nutrientBLevel;
+    data.phUpLevel = phUpLevel;
+    data.phDownLevel = phDownLevel;
+    data.datetime = datetime;
+
+    _display.showData(data);
 }

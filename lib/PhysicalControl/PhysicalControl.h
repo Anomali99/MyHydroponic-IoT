@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include "Config.h"
+#include "LCDDisplay.h"
 #include "NetworkManagement.h"
 #include "MQTTManagement.h"
 #include "MainTank.h"
@@ -19,6 +20,7 @@ class PhysicalControl
 private:
     unsigned long _lastHeartbeatToggle;
     bool _heartbeatLedState;
+    LCDDisplay _display;
     NetworkManagement _networkManagement;
     MQTTManagement _MQTTManagement;
     MainTank _mainTank;
