@@ -14,9 +14,9 @@ enum ConnectionState
 class NetworkManagement
 {
 private:
-    const char *NTP_SERVER;
-    const long GMTOFFSET_SEC;
-    const int DAYLIGHTOFFSET_SEC;
+    const char *NTP_SERVER = "pool.ntp.org";
+    const long GMTOFFSET_SEC = 7 * 3600;
+    const int DAYLIGHTOFFSET_SEC = 0;
     WiFiClient _wifiClient;
 
 public:

@@ -5,20 +5,20 @@
 class PHCorrector
 {
 private:
+    bool _warningStatus = false;
+    float _phUpTankVolume = 1.0;
+    float _phDownTankVolume = 1.0;
+    float _phUpTankMaxLevel = 40.0;
+    float _phDownTankMaxLevel = 40.0;
+    float _phUpTankMinLevel = 10.0;
+    float _phDownTankMinLevel = 10.0;
+    float _phUpTankHeight = 60.0;
+    float _phDownTankHeight = 60.0;
     Adafruit_MCP23X17 _mcp;
     UltrasonicSensor _levelPhUpSensor;
     UltrasonicSensor _levelPhDownSensor;
     byte _pinPumpPhUp;
     byte _pinPumpPhDown;
-    bool _warningStatus;
-    float _phUpTankVolume;
-    float _phDownTankVolume;
-    float _phUpTankMaxLevel;
-    float _phDownTankMaxLevel;
-    float _phUpTankMinLevel;
-    float _phDownTankMinLevel;
-    float _phUpTankHeight;
-    float _phDownTankHeight;
 
 public:
     PHCorrector(Adafruit_MCP23X17 mcp);

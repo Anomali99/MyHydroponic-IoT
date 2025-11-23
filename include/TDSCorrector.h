@@ -8,16 +8,16 @@ private:
     Adafruit_MCP23X17 _mcp;
     UltrasonicSensor _levelASensor;
     UltrasonicSensor _levelBSensor;
-    bool _warningStatus;
-    float _ATankVolume;
-    float _BTankVolume;
-    float _ATankMaxLevel;
-    float _BTankMaxLevel;
-    float _ATankMinLevel;
-    float _BTankMinLevel;
-    float _ATankHeight;
-    float _BTankHeight;
     byte _pinPump;
+    bool _warningStatus = false;
+    float _ATankVolume = 1.0;
+    float _BTankVolume = 1.0;
+    float _ATankMaxLevel = 40.0;
+    float _BTankMaxLevel = 40.0;
+    float _ATankMinLevel = 10.0;
+    float _BTankMinLevel = 10.0;
+    float _ATankHeight = 60.0;
+    float _BTankHeight = 60.0;
 
 public:
     TDSCorrector(Adafruit_MCP23X17 mcp);

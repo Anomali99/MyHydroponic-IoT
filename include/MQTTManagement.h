@@ -15,15 +15,17 @@ private:
     const char *_broker;
     const char *_username;
     const char *_password;
-    const char *_willTopic = "device/status";
-    const char *_willPayload = "0";
     int _port;
     String _clientId;
     unsigned long _lastConnectionCheck;
-    std::vector<String> _topicsToSubscribe;
-    void callback(char *topic, byte *payload, unsigned int length);
-    unsigned long _activityStartTime;
+    const char *_willTopic = "device/status";
+    const char *_willPayload = "0";
+    std::vector<String> _topicsToSubscribe = {"environment/refresh",
+                                              "pump/automation",
+                                              "pump/manually"};
+    unsigned long _activityStartTime = 0;
     const unsigned long ACTIVITY_DURATION = 100;
+    void callback(char *topic, byte *payload, unsigned int length);
 
 public:
     std::function<void(String, String)> messageReceivedCallback;

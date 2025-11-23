@@ -2,15 +2,8 @@
 #include "Config.h"
 
 MainTank::MainTank(Adafruit_MCP23X17 mcp)
-    : NO_CHANGE_TIMEOUT(10000),
-      LEVEL_INCREASE_THRESHOLD(0.5),
-      _mcp(mcp),
+    : _mcp(mcp),
       _levelSensor(UltrasonicSensor(MT_US_TRIG_PIN, MT_US_ECHO_PIN)),
-      _warningStatus(false),
-      _tankVolume(2.0),
-      _tankHeight(60.0),
-      _minLevel(10.0),
-      _maxLevel(40.0),
       _pinValve(MT_MIXER_PIN),
       _pinMixer(MT_VALVE_PIN) {}
 

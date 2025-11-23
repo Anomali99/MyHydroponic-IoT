@@ -6,14 +6,10 @@ MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(conn
                                                                 _broker(MQTT_BROKER),
                                                                 _username(MQTT_USER),
                                                                 _password(MQTT_PASS),
-                                                                _port(MQTT_PORT),
-                                                                _topicsToSubscribe({"environment/refresh",
-                                                                                    "pump/automation",
-                                                                                    "pump/manually"})
+                                                                _port(MQTT_PORT)
 {
     _clientId = "ESP32Client-";
     _clientId += String(random(0xffff), HEX);
-    _activityStartTime = 0;
     messageReceivedCallback = nullptr;
     statusCallback = nullptr;
 }

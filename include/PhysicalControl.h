@@ -59,8 +59,8 @@ private:
     InterruptButton _btnPhDown;
     std::vector<EnvData> _pendingEnv;
     std::vector<PumpData> _pendingPump;
-    float _durationActivatePump;
-    long _debounce;
+    float _durationActivatePump = 10;
+    long _debounce = 1000;
     bool _isIdle();
     void _buttonsHandle();
     void _heartbeatHandle();
