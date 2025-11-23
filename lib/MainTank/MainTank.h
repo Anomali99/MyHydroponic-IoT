@@ -1,10 +1,17 @@
 #pragma once
 #include "UltrasonicSensor.h"
+#include "Config.h"
+#include <Adafruit_MCP23X17.h>
 
 class MainTank
 {
 private:
+    const unsigned long NO_CHANGE_TIMEOUT;
+    const float LEVEL_INCREASE_THRESHOLD;
+    Adafruit_MCP23X17 _mcp;
     UltrasonicSensor _levelSensor;
+    bool _warningStatus;
+    float _tankVolume;
     float _tankHeight;
     float _minLevel;
     float _maxLevel;
@@ -12,15 +19,11 @@ private:
     byte _pinMixer;
 
 public:
-    MainTank(
-        byte pinTrigLevel,
-        byte pinEchoLevel,
-        byte pinValve,
-        byte pinMixer,
-        float tankHeight,
-        float minLevel,
-        float maxLevel);
+    MainTank(Adafruit_MCP23X17 mcp);
     void setup();
+    void loop();
     void activeMixer();
     float getLevelCm();
+    float getCurrentVolume();
+    bool isWarning();
 };

@@ -1,24 +1,25 @@
 #include "PhysicalControl.h"
 
-PhysicalControl::PhysicalControl() : _lastHeartbeatToggle(0),
-                                     _heartbeatLedState(LOW),
+PhysicalControl::PhysicalControl() : _mcp(),
+                                     _ads(),
                                      _display(0x27),
-                                     _topics({"environment/refresh", "pump/automation", "pump/manually"}),
-                                     _networkManagement(NTP_SERVER, GMTOFFSET),
-                                     _MQTTManagement(_networkManagement, MQTT_BROKER, MQTT_PORT, _topics),
-                                     _mainTank(MT_US_TRIG_PIN, MT_US_ECHO_PIN, MT_VALVE_PIN, MT_MIXER_PIN, tankHeight, minLevel, maxLevel),
-                                     _measuringTank(MeT_PH_PIN, MeT_TDS_PIN, MeT_VALVE_PIN, MeT_PUMP_PIN),
-                                     _PHCorrector(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN, PH_DOWN_US_TRIG_PIN, PH_DOWN_US_ECHO_PIN, PH_UP_PUMP_PIN, PH_DOWN_PUMP_PIN, phUpTankHeight, phDownTankHeight),
-                                     _TDSCorrector(TDS_A_US_TRIG_PIN, TDS_A_US_ECHO_PIN, TDS_B_US_TRIG_PIN, TDS_B_US_ECHO_PIN, TDS_TDS_PUMP_PIN, ATankHeight, BTankHeight)
+                                     _networkManagement(),
+                                     _MQTTManagement(_networkManagement),
+                                     _mainTank(_mcp),
+                                     _measuringTank(_ads, _mcp),
+                                     _PHCorrector(_mcp),
+                                     _TDSCorrector(_mcp),
+                                     _btnReconnect(PC_BTN_RECONNECT_PIN),
+                                     _btnReadEnv(PC_BTN_READ_ENV_PIN),
+                                     _btnNutrition(PC_BTN_ADD_NUTRITION_PIN),
+                                     _btnPhUp(PC_BTN_ADD_PH_UP_PIN),
+                                     _btnPhDown(PC_BTN_ADD_PH_DOWN_PIN)
 {
+    _status = IDLE;
+
     _networkManagement.statusCallback = [this](bool status)
     {
         this->_WifiStatusHandle(status);
-    };
-
-    _networkManagement.statusInternetCallback = [this](bool status)
-    {
-        this->_iternetStatusHandle(status);
     };
 
     _MQTTManagement.statusCallback = [this](bool status)
@@ -34,37 +35,136 @@ PhysicalControl::PhysicalControl() : _lastHeartbeatToggle(0),
 
 void PhysicalControl::setup()
 {
-    pinMode(PC_LED_HEARTBEAT_PIN, OUTPUT);
-    pinMode(PC_LED_WIFI_PIN, OUTPUT);
-    pinMode(PC_LED_INTERNET_PIN, OUTPUT);
-    pinMode(PC_LED_MQTT_PIN, OUTPUT);
-    pinMode(PC_LED_READ_ENV_PIN, OUTPUT);
-    pinMode(PC_LED_ADD_EVENT_PIN, OUTPUT);
-    pinMode(PC_BUZZER_PIN, OUTPUT);
+    _ads.begin();
+    _ads.setGain(GAIN_TWOTHIRDS);
+    _mcp.begin_I2C();
+
+    _mcp.pinMode(PC_LED_HEARTBEAT_PIN, OUTPUT);
+    _mcp.pinMode(PC_LED_WIFI_PIN, OUTPUT);
+    _mcp.pinMode(PC_LED_WARNING_PIN, OUTPUT);
+    _mcp.pinMode(PC_LED_MQTT_PIN, OUTPUT);
+    _mcp.pinMode(PC_LED_READ_ENV_PIN, OUTPUT);
+    _mcp.pinMode(PC_LED_ADD_EVENT_PIN, OUTPUT);
+    _mcp.pinMode(PC_BUZZER_PIN, OUTPUT);
 
     _display.setup();
-    _networkManagement.setup(WIFI_SSID, WIFI_PASS);
+    _networkManagement.setup();
     _MQTTManagement.setup();
     _mainTank.setup();
     _measuringTank.setup();
     _PHCorrector.setup();
     _TDSCorrector.setup();
+
+    _btnReconnect.setup();
+    _btnReadEnv.setup();
+    _btnNutrition.setup();
+    _btnPhUp.setup();
+    _btnPhDown.setup();
 }
 
 void PhysicalControl::loop()
 {
     _networkManagement.loop();
     _MQTTManagement.loop();
+    _mainTank.loop();
 
-    static unsigned long lastReconnectAttempt = 0;
-    unsigned long now = millis();
-    if (now - _lastHeartbeatToggle > 500)
+    _buttonsHandle();
+    _heartbeatHandle();
+    _warningHandle();
+}
+
+bool PhysicalControl::_isIdle()
+{
+    if (_status != IDLE)
     {
-        _lastHeartbeatToggle = now;
-        _heartbeatLedState = !_heartbeatLedState;
-        digitalWrite(PC_LED_HEARTBEAT_PIN, _heartbeatLedState ? HIGH : LOW);
+        _mcp.digitalWrite(PC_BUZZER_PIN, HIGH);
+        delay(200);
+        _mcp.digitalWrite(PC_BUZZER_PIN, HIGH);
     }
-    lastReconnectAttempt = millis();
+
+    return true;
+}
+
+void PhysicalControl::_heartbeatHandle()
+{
+    static unsigned long lastHeartbeat = 0;
+    static unsigned long heartbeatState = false;
+    unsigned long now = millis();
+
+    if (now - lastHeartbeat > 500)
+    {
+        lastHeartbeat = now;
+        heartbeatState = !heartbeatState;
+        _mcp.digitalWrite(PC_LED_HEARTBEAT_PIN, heartbeatState ? HIGH : LOW);
+    }
+}
+
+void PhysicalControl::_warningHandle()
+{
+    static unsigned long lastWarning = 0;
+    static unsigned long warningState = false;
+
+    if (_mainTank.isWarning(), _PHCorrector.isWarning(), _TDSCorrector.isWarning() || warningState)
+    {
+        unsigned long now = millis();
+
+        if (now - lastWarning > 200)
+        {
+            lastWarning = now;
+            warningState = !warningState;
+            _mcp.digitalWrite(PC_LED_WARNING_PIN, warningState ? HIGH : LOW);
+            _mcp.digitalWrite(PC_BUZZER_PIN, warningState ? HIGH : LOW);
+        }
+    }
+}
+
+void PhysicalControl::_buttonsHandle()
+{
+    unsigned long now = millis();
+    bool anyButtonPressed = _btnReconnect.isBtnPressed() || _btnReadEnv.isBtnPressed() || _btnNutrition.isBtnPressed() || _btnPhUp.isBtnPressed() || _btnPhDown.isBtnPressed();
+
+    if (anyButtonPressed)
+    {
+        noInterrupts();
+
+        if (_btnReconnect.isBtnPressed() && (now - _btnReconnect.getLastPress() > debounce))
+        {
+            _btnReconnect.setBtnPressed(false);
+            _btnReconnect.setLastPress(now);
+            _networkManagement.reconnect();
+        }
+
+        if (_btnReadEnv.isBtnPressed() && (now - _btnReadEnv.getLastPress() > debounce))
+        {
+            _btnReadEnv.setBtnPressed(false);
+            _btnReadEnv.setLastPress(now);
+            _readEnvironmentHandle();
+        }
+
+        if (_btnNutrition.isBtnPressed() && (now - _btnNutrition.getLastPress() > debounce))
+        {
+            _btnNutrition.setBtnPressed(false);
+            _btnNutrition.setLastPress(now);
+            _pumpHandle(NUTRITION);
+            ;
+        }
+
+        if (_btnPhUp.isBtnPressed() && (now - _btnPhUp.getLastPress() > debounce))
+        {
+            _btnPhUp.setBtnPressed(false);
+            _btnPhUp.setLastPress(now);
+            _pumpHandle(PH_UP);
+        }
+
+        if (_btnPhDown.isBtnPressed() && (now - _btnPhDown.getLastPress() > debounce))
+        {
+            _btnPhDown.setBtnPressed(false);
+            _btnPhDown.setLastPress(now);
+            _pumpHandle(PH_DOWN);
+        }
+
+        interrupts();
+    }
 }
 
 void PhysicalControl::_messageHandle(String topic, String payload)
@@ -81,29 +181,12 @@ void PhysicalControl::_messageHandle(String topic, String payload)
 
 void PhysicalControl::_WifiStatusHandle(bool status)
 {
-    if (status)
-        digitalWrite(PC_LED_WIFI_PIN, HIGH);
-
-    else
-        digitalWrite(PC_LED_WIFI_PIN, LOW);
-}
-
-void PhysicalControl::_iternetStatusHandle(bool status)
-{
-    if (status)
-        digitalWrite(PC_LED_INTERNET_PIN, HIGH);
-
-    else
-        digitalWrite(PC_LED_INTERNET_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_WIFI_PIN, status);
 }
 
 void PhysicalControl::_MQTTStatusHandle(bool status)
 {
-    if (status)
-        digitalWrite(PC_LED_MQTT_PIN, HIGH);
-
-    else
-        digitalWrite(PC_LED_MQTT_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_MQTT_PIN, status);
 }
 
 void PhysicalControl::_refreshEnvHandle(String payload)
@@ -114,23 +197,12 @@ void PhysicalControl::_refreshEnvHandle(String payload)
     if (error)
         return;
 
-    if (doc.containsKey("url"))
-    {
-        JsonVariant urlVariant = doc["url"];
-
-        if (urlVariant.is<const char *>())
-        {
-            String url = urlVariant.as<String>();
-            _networkManagement.getHttpRequest(url);
-        }
-    }
-
     if (doc.containsKey("status"))
     {
         bool status = doc["status"].as<bool>();
 
         if (status)
-            _readEnvronmentHandle();
+            _readEnvironmentHandle();
     }
 }
 
@@ -158,39 +230,80 @@ void PhysicalControl::_activatePumpHandle(String payload)
     }
 }
 
-void PhysicalControl::_readEnvronmentHandle()
+void PhysicalControl::_readEnvironmentHandle()
 {
-    float mainTankLevel = _mainTank.getLevelCm();
-    float phUpLevel = _PHCorrector.getPhUpLevelCm();
-    float phDownLevel = _PHCorrector.getPhDownLevelCm();
-    float nutrientALevel = _TDSCorrector.getALevelCm();
-    float nutrientBLevel = _TDSCorrector.getBLevelCm();
+    _mcp.digitalWrite(PC_LED_READ_ENV_PIN, HIGH);
+    _status = READ_ENV;
+
     EnvironmentData env = _measuringTank.readData();
-    String datetime = _networkManagement.getCurrentTime();
+
+    EnvData data;
+    data.ph = env.ph;
+    data.tds = env.tds;
+    data.temp = env.temp;
+    data.tankA = _TDSCorrector.getACurrentVolume();
+    data.tankB = _TDSCorrector.getBCurrentVolume();
+    data.tankPhUp = _PHCorrector.getPhUpCurrentVolume();
+    data.tankPhDown = _PHCorrector.getPhDownCurrentVolume();
+    data.tankMain = _mainTank.getCurrentVolume();
+    data.datetime = _networkManagement.getCurrentTime();
 
     StaticJsonDocument<200> json;
-    json["ph"] = env.ph;
-    json["tds"] = env.tds;
-    json["tank_a"] = nutrientALevel;
-    json["tank_b"] = nutrientBLevel;
-    json["tank_ph_up"] = phUpLevel;
-    json["tank_down_up"] = phDownLevel;
-    json["tank_main"] = mainTankLevel;
-    json["datetime"] = datetime;
+    json["ph"] = data.ph;
+    json["tds"] = data.tds;
+    json["temp"] = data.temp;
+    json["tank_a"] = data.tankA;
+    json["tank_b"] = data.tankB;
+    json["tank_ph_up"] = data.tankPhUp;
+    json["tank_ph_down"] = data.tankPhDown;
+    json["tank_main"] = data.tankMain;
+    json["datetime"] = data.datetime;
 
     char buffer[200];
     serializeJson(json, buffer);
-    _MQTTManagement.publish("environment/data", buffer);
+    bool status = _MQTTManagement.publish("environment/data", buffer);
 
-    DisplayData data;
-    data.ph = env.ph;
-    data.tds = env.tds;
-    data.mainTankLevel = mainTankLevel;
-    data.nutrientALevel = nutrientALevel;
-    data.nutrientBLevel = nutrientBLevel;
-    data.phUpLevel = phUpLevel;
-    data.phDownLevel = phDownLevel;
-    data.datetime = datetime;
+    if (!status)
+        _pendingEnv.push_back(data);
 
     _display.showData(data);
+
+    _status = IDLE;
+    _mcp.digitalWrite(PC_LED_READ_ENV_PIN, LOW);
+}
+
+void PhysicalControl::_pumpHandle(PumpType type)
+{
+    if (_isIdle())
+        return;
+
+    _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, HIGH);
+    _status = ADD_CORRECTOR;
+
+    if (type == NUTRITION)
+        _TDSCorrector.activePump(durationActivatePump);
+    else if (type == PH_UP)
+        _PHCorrector.activePhUpPump(durationActivatePump);
+    else if (type == PH_DOWN)
+        _PHCorrector.activePhDownPump(durationActivatePump);
+
+    PumpData data;
+    data.duration = durationActivatePump;
+    data.type = type;
+    data.datetime = _networkManagement.getCurrentTime();
+
+    StaticJsonDocument<200> json;
+    json["duration"] = data.duration;
+    json["pump"] = data.type;
+    json["datetime"] = data.datetime;
+
+    char buffer[200];
+    serializeJson(json, buffer);
+    bool status = _MQTTManagement.publish("pump/locally", buffer);
+
+    if (!status)
+        _pendingPump.push_back(data);
+
+    _status = IDLE;
+    _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, LOW);
 }

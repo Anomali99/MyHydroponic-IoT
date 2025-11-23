@@ -1,74 +1,75 @@
 #include "NetworkManagement.h"
 
-NetworkManagement::NetworkManagement(
-    const char *NTP_SERVER,
-    const long GMTOFFSET,
-    const int DAYLIGHTOFFSET_SEC) : NTP_SERVER(NTP_SERVER),
-                                    GMTOFFSET_SEC(GMTOFFSET * 3600),
-                                    DAYLIGHTOFFSET_SEC(DAYLIGHTOFFSET_SEC)
+NetworkManagement::NetworkManagement() : NTP_SERVER(NTP_SERVER),
+                                         GMTOFFSET_SEC(GMTOFFSET * 3600),
+                                         DAYLIGHTOFFSET_SEC(DAYLIGHTOFFSET_SEC)
 {
-    _lastConnectionCheck = 0;
+    currentState = IDLE;
     statusCallback = nullptr;
-    statusInternetCallback = nullptr;
 }
 
-void NetworkManagement::setup(const char *ssid, const char *pass)
+void NetworkManagement::setup()
 {
-    WiFi.begin(ssid, pass);
-
-    if (statusCallback)
-        statusCallback(false);
-
-    if (statusInternetCallback)
-        statusInternetCallback(false);
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    currentState = CONNECTING;
 }
 
 void NetworkManagement::loop()
 {
-    static unsigned long lastReconnectAttempt = 0;
+    static unsigned long lastConnectionCheck = 0;
+    static unsigned long lastBlinkTime = 0;
+
     unsigned long now = millis();
-    if (now - _lastConnectionCheck > 5000)
+    if (now - lastConnectionCheck > 5000)
     {
-        _lastConnectionCheck = now;
-        if (!isConnected())
+        lastConnectionCheck = now;
+
+        if (isConnected())
         {
-            if (statusCallback)
-                statusCallback(false);
-            reconnect();
+            if (currentState != CONNECTED)
+            {
+                currentState = CONNECTED;
+                if (statusCallback)
+                    statusCallback(true);
+            }
         }
         else
-            checkInternetConnection();
+        {
+            if (currentState == CONNECTED)
+            {
+                currentState = DISCONNECTED;
+                if (statusCallback)
+                    statusCallback(false);
+            }
+            else if (currentState != CONNECTING)
+            {
+                currentState = CONNECTING;
+                reconnect();
+            }
+        }
     }
-    lastReconnectAttempt = millis();
-}
 
-void NetworkManagement::checkInternetConnection()
-{
-    IPAddress result;
-    bool currentInternetState = (WiFi.hostByName("google.com", result) == 1);
-    if (statusInternetCallback)
+    if (currentState == CONNECTING)
     {
-        statusInternetCallback(currentInternetState);
+        if (now - lastBlinkTime >= 250)
+        {
+            lastBlinkTime = now;
+
+            if (statusCallback)
+            {
+                static bool ledStatus = false;
+                ledStatus = !ledStatus;
+                statusCallback(ledStatus);
+            }
+        }
     }
 }
 
 void NetworkManagement::reconnect()
 {
-    if (WiFi.reconnect())
+    if (!WiFi.reconnect())
     {
-        if (statusCallback)
-        {
-            statusCallback(true);
-            checkInternetConnection();
-        }
-    }
-    else
-    {
-        if (statusCallback)
-        {
-            statusCallback(false);
-            statusInternetCallback(false);
-        }
+        currentState = DISCONNECTED;
     }
 }
 
@@ -95,24 +96,4 @@ String NetworkManagement::getCurrentTime(const char *format)
     }
     else
         return "null";
-}
-
-void NetworkManagement::getHttpRequest(String url)
-{
-    if (!isConnected())
-        return;
-
-    HTTPClient http;
-    http.begin(url);
-    int httpCode = http.GET();
-
-    if (httpCode > 0)
-    {
-        if (httpCode == HTTP_CODE_OK)
-        {
-            String payload = http.getString();
-        }
-    }
-
-    http.end();
 }

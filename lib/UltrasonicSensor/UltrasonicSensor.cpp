@@ -21,7 +21,7 @@ float UltrasonicSensor::getDistanceCm()
     digitalWrite(_pinTrig, LOW);
 
     long duration = pulseIn(_pinEcho, HIGH);
-    float distance = duration * 0.034 / 2;
+    float distance = duration * 0.0344 / 2;
 
     return distance;
 }

@@ -1,18 +1,18 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Adafruit_ADS1X15.h>
 
-#define VREF 3.3
-#define ADC_RESOLUTION 4096.0
-#define SAMPLES 30
+#define VREF 5.0
+#define K_VALUE 1.0
 
 class TDSSensor
 {
 private:
+    Adafruit_ADS1115 _ads;
     byte _pin;
 
 public:
-    TDSSensor(byte pin);
-    void setup();
+    TDSSensor(Adafruit_ADS1115 ads, byte pin);
     float readTDS(float temp = 25.0);
 };

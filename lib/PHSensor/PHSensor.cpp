@@ -1,24 +1,13 @@
 #include "PHSensor.h"
 
-PHSensor::PHSensor(byte pin) : _pin(pin) {}
-
-void PHSensor::setup()
-{
-    pinMode(_pin, INPUT);
-}
+PHSensor::PHSensor(Adafruit_ADS1115 ads, byte pin) : _ads(ads), _pin(pin) {}
 
 float PHSensor::readPh()
 {
-    long totalValue = 0;
-    for (int i = 0; i < SAMPLES; i++)
-    {
-        totalValue += analogRead(_pin);
-        delay(20);
-    }
+    int16_t adcValue = _ads.readADC_SingleEnded(_pin);
 
-    float averageValue = totalValue / (float)SAMPLES;
-    float voltage = (averageValue * VREF) / ADC_RESOLUTION;
-    float phValue = (PH_SLOPE * voltage) + PH_OFFSET;
+    float voltage = adcValue * 6.144 / 32767.0;
+    float phValue = 7.0 + ((PH_OFFSET - voltage) / PH_SLOPE);
 
     return phValue;
 }

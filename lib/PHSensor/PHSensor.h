@@ -1,19 +1,17 @@
 #pragma once
 #include <Arduino.h>
+#include <Adafruit_ADS1X15.h>
 
-#define VREF 3.3
-#define ADC_RESOLUTION 4096.0
-#define SAMPLES 30
-#define PH_SLOPE -5.70
-#define PH_OFFSET 21.34
+#define PH_SLOPE 0.175
+#define PH_OFFSET 2.5
 
 class PHSensor
 {
 private:
+    Adafruit_ADS1115 _ads;
     byte _pin;
 
 public:
-    PHSensor(byte pin);
-    void setup();
+    PHSensor(Adafruit_ADS1115 ads, byte pin);
     float readPh();
 };

@@ -17,7 +17,7 @@ void LCDDisplay::clear()
     _lcd.clear();
 }
 
-void LCDDisplay::showData(const DisplayData &data)
+void LCDDisplay::showData(const EnvData &data)
 {
     _lcd.clear();
 
@@ -71,7 +71,7 @@ String LCDDisplay::_getShortTime(const String &datetime)
     return datetime.substring(0, 8);
 }
 
-void LCDDisplay::_displayPage0(const DisplayData &data)
+void LCDDisplay::_displayPage0(const EnvData &data)
 {
     _lcd.setCursor(0, 0);
     _lcd.print("pH:");
@@ -83,36 +83,37 @@ void LCDDisplay::_displayPage0(const DisplayData &data)
     _lcd.print("Time:" + _getShortTime(data.datetime));
 }
 
-void LCDDisplay::_displayPage1(const DisplayData &data)
+void LCDDisplay::_displayPage1(const EnvData &data)
 {
     _lcd.setCursor(0, 0);
-    _lcd.print("Main Tank:");
-    _lcd.print(data.mainTankLevel, 1);
-    _lcd.print("cm");
+    _lcd.print("Temp:");
+    _lcd.print(data.temp, 1);
+    _lcd.print(" MT:");
+    _lcd.print(data.tankMain, 1);
 
     _lcd.setCursor(0, 1);
     _lcd.print("Time:" + _getShortTime(data.datetime));
 }
 
-void LCDDisplay::_displayPage2(const DisplayData &data)
+void LCDDisplay::_displayPage2(const EnvData &data)
 {
     _lcd.setCursor(0, 0);
     _lcd.print("Up:");
-    _lcd.print(data.phUpLevel, 1);
+    _lcd.print(data.tankPhUp, 1);
     _lcd.print(" Dn:");
-    _lcd.print(data.phDownLevel, 1);
+    _lcd.print(data.tankPhDown, 1);
 
     _lcd.setCursor(0, 1);
     _lcd.print("Time:" + _getShortTime(data.datetime));
 }
 
-void LCDDisplay::_displayPage3(const DisplayData &data)
+void LCDDisplay::_displayPage3(const EnvData &data)
 {
     _lcd.setCursor(0, 0);
     _lcd.print("NutA:");
-    _lcd.print(data.nutrientALevel, 1);
+    _lcd.print(data.tankA, 1);
     _lcd.print(" B:");
-    _lcd.print(data.nutrientBLevel, 1);
+    _lcd.print(data.tankB, 1);
 
     _lcd.setCursor(0, 1);
     _lcd.print("Time:" + _getShortTime(data.datetime));

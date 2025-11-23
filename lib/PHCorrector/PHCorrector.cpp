@@ -1,40 +1,57 @@
 #include "PHCorrector.h"
 
-PHCorrector::PHCorrector(
-    byte pinTrigPhUpLevel,
-    byte pinEchoPhUpLevel,
-    byte pinTrigPhDownLevel,
-    byte pinEchoPhDownLevel,
-    byte pinPumpPhUp,
-    byte pinPumpPhDown,
-    float phUpTankHeight,
-    float phDownTankHeight) : _levelPhUpSensor(UltrasonicSensor(pinTrigPhUpLevel, pinEchoPhUpLevel)),
-                              _levelPhDownSensor(UltrasonicSensor(pinTrigPhDownLevel, pinEchoPhDownLevel)),
-                              _pinPumpPhUp(pinPumpPhUp),
-                              _pinPumpPhDown(pinPumpPhDown),
-                              _phUpTankHeight(phUpTankHeight),
-                              _phDownTankHeight(phDownTankHeight) {}
+PHCorrector::PHCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
+                                                  _levelPhUpSensor(UltrasonicSensor(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN)),
+                                                  _levelPhDownSensor(UltrasonicSensor(PH_DOWN_US_TRIG_PIN, PH_DOWN_US_ECHO_PIN)),
+                                                  _pinPumpPhUp(PH_UP_PUMP_PIN),
+                                                  _pinPumpPhDown(PH_DOWN_PUMP_PIN),
+                                                  _warningStatus(false),
+                                                  _phUpTankVolume(phUpTankVolume),
+                                                  _phDownTankVolume(phDownTankVolume),
+                                                  _phUpTankMaxLevel(phUpTankMaxLevel),
+                                                  _phDownTankMaxLevel(phDownTankMaxLevel),
+                                                  _phUpTankMinLevel(phUpTankMinLevel),
+                                                  _phDownTankMinLevel(phDownTankMinLevel),
+                                                  _phUpTankHeight(phUpTankHeight),
+                                                  _phDownTankHeight(phDownTankHeight) {}
 
 void PHCorrector::setup()
 {
     _levelPhUpSensor.setup();
     _levelPhDownSensor.setup();
-    pinMode(_pinPumpPhUp, OUTPUT);
-    pinMode(_pinPumpPhDown, OUTPUT);
+    _mcp.pinMode(_pinPumpPhUp, OUTPUT);
+    _mcp.pinMode(_pinPumpPhDown, OUTPUT);
+}
+
+void PHCorrector::loop()
+{
+    static unsigned long lastLevelCheck = 0;
+    unsigned long now = millis();
+
+    if (now - lastLevelCheck >= 5000)
+    {
+        lastLevelCheck = now;
+        float phUpLevel = getPhUpLevelCm();
+        float phDownLevel = getPhDownLevelCm();
+        if (phUpLevel > _phUpTankMinLevel && phDownLevel > _phDownTankMinLevel)
+            _warningStatus = false;
+        else
+            _warningStatus = true;
+    }
 }
 
 void PHCorrector::activePhUpPump(float duration)
 {
-    digitalWrite(_pinPumpPhUp, HIGH);
+    _mcp.digitalWrite(_pinPumpPhUp, HIGH);
     delay(duration * 1000);
-    digitalWrite(_pinPumpPhUp, LOW);
+    _mcp.digitalWrite(_pinPumpPhUp, LOW);
 }
 
 void PHCorrector::activePhDownPump(float duration)
 {
-    digitalWrite(_pinPumpPhDown, HIGH);
+    _mcp.digitalWrite(_pinPumpPhDown, HIGH);
     delay(duration * 1000);
-    digitalWrite(_pinPumpPhDown, LOW);
+    _mcp.digitalWrite(_pinPumpPhDown, LOW);
 }
 
 float PHCorrector::getPhUpLevelCm()
@@ -51,4 +68,25 @@ float PHCorrector::getPhDownLevelCm()
     float level = _pinPumpPhDown - distance;
 
     return level;
+}
+
+float PHCorrector::getPhUpCurrentVolume()
+{
+    float currenLevel = getPhUpLevelCm();
+    float currentVolume = _phUpTankVolume * (currenLevel / _phUpTankMaxLevel);
+
+    return currentVolume;
+}
+
+float PHCorrector::getPhDownCurrentVolume()
+{
+    float currenLevel = getPhDownLevelCm();
+    float currentVolume = _phDownTankVolume * (currenLevel / _phDownTankMaxLevel);
+
+    return currentVolume;
+}
+
+bool PHCorrector::isWarning()
+{
+    return _warningStatus;
 }

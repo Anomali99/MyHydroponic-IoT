@@ -2,30 +2,32 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "Config.h"
+
+enum ConnectionState
+{
+    IDLE,
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED
+};
 
 class NetworkManagement
 {
 private:
-    const char *NTP_SERVER = "pool.ntp.org";
-    const long GMTOFFSET_SEC = 7 * 3600;
+    const char *NTP_SERVER;
+    const long GMTOFFSET_SEC;
     const int DAYLIGHTOFFSET_SEC = 0;
     WiFiClient _wifiClient;
-    unsigned long _lastConnectionCheck;
-    void checkInternetConnection();
 
 public:
     std::function<void(bool)> statusCallback;
-    std::function<void(bool)> statusInternetCallback;
-    NetworkManagement(
-        const char *NTP_SERVER = "pool.ntp.org",
-        const long GMTOFFSET = 7,
-        const int DAYLIGHTOFFSET_SEC = 0);
-    void setup(const char *ssid,
-               const char *pass);
+    ConnectionState currentState;
+    NetworkManagement();
+    void setup();
     void loop();
     void reconnect();
     bool isConnected();
     WiFiClient &getClient();
     String getCurrentTime(const char *format = "%Y-%m-%d %H:%M:%S");
-    void getHttpRequest(String url);
 };

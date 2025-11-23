@@ -1,18 +1,16 @@
 #include "MQTTManagement.h"
 
-MQTTManagement::MQTTManagement(
-    NetworkManagement &connection,
-    const char *broker,
-    int port,
-    std::vector<String> topics) : _connection(connection),
-                                  _mqttClient(connection.getClient()),
-                                  _broker(broker),
-                                  _port(port),
-                                  _topicsToSubscribe(topics)
+MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(connection),
+                                                                _mqttClient(connection.getClient()),
+                                                                _broker(MQTT_BROKER),
+                                                                _username(MQTT_USER),
+                                                                _password(MQTT_PASS),
+                                                                _port(MQTT_PORT),
+                                                                _topicsToSubscribe(topics)
 {
     _clientId = "ESP32Client-";
     _clientId += String(random(0xffff), HEX);
-    _lastConnectionCheck = 0;
+    _activityStartTime = 0;
     messageReceivedCallback = nullptr;
     statusCallback = nullptr;
 }
@@ -26,6 +24,8 @@ void MQTTManagement::setup()
 
 void MQTTManagement::callback(char *topic, byte *payload, unsigned int length)
 {
+    _activityStartTime = millis();
+
     char message[length + 1];
     memcpy(message, payload, length);
     message[length] = '\0';
@@ -39,16 +39,41 @@ void MQTTManagement::callback(char *topic, byte *payload, unsigned int length)
 
 void MQTTManagement::loop()
 {
-    static unsigned long lastReconnectAttempt = 0;
+    static unsigned long lastConnectionCheck = 0;
     unsigned long now = millis();
-    if (now - _lastConnectionCheck > 5000)
+
+    if (now - lastConnectionCheck > 5000)
     {
-        _lastConnectionCheck = now;
+        lastConnectionCheck = now;
         if (!_mqttClient.connected())
         {
             if (statusCallback)
                 statusCallback(false);
             reconnect();
+        }
+        else
+        {
+            if (statusCallback && (now - _activityStartTime > ACTIVITY_DURATION))
+            {
+                statusCallback(true);
+            }
+        }
+    }
+
+    if (_mqttClient.connected())
+    {
+        if (now - _activityStartTime < ACTIVITY_DURATION)
+        {
+            if (statusCallback)
+            {
+                statusCallback(false);
+                statusCallback(true);
+            }
+        }
+        else if (now - lastConnectionCheck > 5000)
+        {
+            if (statusCallback)
+                statusCallback(true);
         }
     }
 
@@ -64,10 +89,13 @@ void MQTTManagement::reconnect()
         return;
     }
 
-    if (_mqttClient.connect(_clientId.c_str()))
+    if (_mqttClient.connect(_clientId.c_str(), _username, _password,
+                            _willTopic, 1, true, _willPayload))
     {
         if (statusCallback)
             statusCallback(true);
+
+        publish(_willTopic, "1", true);
 
         for (const String &topic : _topicsToSubscribe)
             subscribe(topic.c_str());
@@ -79,10 +107,10 @@ void MQTTManagement::reconnect()
     }
 }
 
-bool MQTTManagement::publish(const char *topic, const char *payload)
+bool MQTTManagement::publish(const char *topic, const char *payload, bool retain)
 {
     if (_mqttClient.connected())
-        return _mqttClient.publish(topic, payload);
+        return _mqttClient.publish(topic, payload, retain);
 
     else
         return false;
