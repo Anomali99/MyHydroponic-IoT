@@ -1,4 +1,5 @@
 #include "PhysicalControl.h"
+#include "Config.h"
 
 PhysicalControl::PhysicalControl() : _mcp(),
                                      _ads(),
@@ -9,6 +10,8 @@ PhysicalControl::PhysicalControl() : _mcp(),
                                      _measuringTank(_ads, _mcp),
                                      _PHCorrector(_mcp),
                                      _TDSCorrector(_mcp),
+                                     _durationActivatePump(1.0),
+                                     _debounce(1000),
                                      _btnReconnect(PC_BTN_RECONNECT_PIN),
                                      _btnReadEnv(PC_BTN_READ_ENV_PIN),
                                      _btnNutrition(PC_BTN_ADD_NUTRITION_PIN),
@@ -127,21 +130,21 @@ void PhysicalControl::_buttonsHandle()
     {
         noInterrupts();
 
-        if (_btnReconnect.isBtnPressed() && (now - _btnReconnect.getLastPress() > debounce))
+        if (_btnReconnect.isBtnPressed() && (now - _btnReconnect.getLastPress() > _debounce))
         {
             _btnReconnect.setBtnPressed(false);
             _btnReconnect.setLastPress(now);
             _networkManagement.reconnect();
         }
 
-        if (_btnReadEnv.isBtnPressed() && (now - _btnReadEnv.getLastPress() > debounce))
+        if (_btnReadEnv.isBtnPressed() && (now - _btnReadEnv.getLastPress() > _debounce))
         {
             _btnReadEnv.setBtnPressed(false);
             _btnReadEnv.setLastPress(now);
             _readEnvironmentHandle();
         }
 
-        if (_btnNutrition.isBtnPressed() && (now - _btnNutrition.getLastPress() > debounce))
+        if (_btnNutrition.isBtnPressed() && (now - _btnNutrition.getLastPress() > _debounce))
         {
             _btnNutrition.setBtnPressed(false);
             _btnNutrition.setLastPress(now);
@@ -149,14 +152,14 @@ void PhysicalControl::_buttonsHandle()
             ;
         }
 
-        if (_btnPhUp.isBtnPressed() && (now - _btnPhUp.getLastPress() > debounce))
+        if (_btnPhUp.isBtnPressed() && (now - _btnPhUp.getLastPress() > _debounce))
         {
             _btnPhUp.setBtnPressed(false);
             _btnPhUp.setLastPress(now);
             _pumpHandle(PH_UP);
         }
 
-        if (_btnPhDown.isBtnPressed() && (now - _btnPhDown.getLastPress() > debounce))
+        if (_btnPhDown.isBtnPressed() && (now - _btnPhDown.getLastPress() > _debounce))
         {
             _btnPhDown.setBtnPressed(false);
             _btnPhDown.setLastPress(now);
@@ -281,14 +284,14 @@ void PhysicalControl::_pumpHandle(PumpType type)
     _status = ADD_CORRECTOR;
 
     if (type == NUTRITION)
-        _TDSCorrector.activePump(durationActivatePump);
+        _TDSCorrector.activePump(_durationActivatePump);
     else if (type == PH_UP)
-        _PHCorrector.activePhUpPump(durationActivatePump);
+        _PHCorrector.activePhUpPump(_durationActivatePump);
     else if (type == PH_DOWN)
-        _PHCorrector.activePhDownPump(durationActivatePump);
+        _PHCorrector.activePhDownPump(_durationActivatePump);
 
     PumpData data;
-    data.duration = durationActivatePump;
+    data.duration = _durationActivatePump;
     data.type = type;
     data.datetime = _networkManagement.getCurrentTime();
 

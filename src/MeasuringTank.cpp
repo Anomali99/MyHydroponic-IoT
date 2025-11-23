@@ -1,4 +1,5 @@
 #include "MeasuringTank.h"
+#include "Config.h"
 
 MeasuringTank::MeasuringTank(
     Adafruit_ADS1115 ads,

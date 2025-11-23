@@ -1,4 +1,5 @@
 #include "MQTTManagement.h"
+#include "Config.h"
 
 MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(connection),
                                                                 _mqttClient(connection.getClient()),
@@ -6,7 +7,9 @@ MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(conn
                                                                 _username(MQTT_USER),
                                                                 _password(MQTT_PASS),
                                                                 _port(MQTT_PORT),
-                                                                _topicsToSubscribe(topics)
+                                                                _topicsToSubscribe({"environment/refresh",
+                                                                                    "pump/automation",
+                                                                                    "pump/manually"})
 {
     _clientId = "ESP32Client-";
     _clientId += String(random(0xffff), HEX);

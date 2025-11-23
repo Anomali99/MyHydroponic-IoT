@@ -2,7 +2,6 @@
 #include "PHSensor.h"
 #include "TDSSensor.h"
 #include "TemperatureSensor.h"
-#include "Config.h"
 #include <Adafruit_MCP23X17.h>
 
 struct EnvironmentData

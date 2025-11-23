@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include "NetworkManagement.h"
-#include "Config.h"
 
 class MQTTManagement
 {

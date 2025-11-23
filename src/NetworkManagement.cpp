@@ -1,10 +1,11 @@
 #include "NetworkManagement.h"
+#include "Config.h"
 
-NetworkManagement::NetworkManagement() : NTP_SERVER(NTP_SERVER),
-                                         GMTOFFSET_SEC(GMTOFFSET * 3600),
-                                         DAYLIGHTOFFSET_SEC(DAYLIGHTOFFSET_SEC)
+NetworkManagement::NetworkManagement() : NTP_SERVER("pool.ntp.org"),
+                                         GMTOFFSET_SEC(7 * 3600),
+                                         DAYLIGHTOFFSET_SEC(0)
 {
-    currentState = IDLE;
+    currentState = NONE;
     statusCallback = nullptr;
 }
 

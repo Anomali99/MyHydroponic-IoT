@@ -9,7 +9,6 @@
 #include <functional>
 #include <vector>
 #include <string>
-#include "Config.h"
 #include "LCDDisplay.h"
 #include "NetworkManagement.h"
 #include "MQTTManagement.h"
@@ -60,6 +59,8 @@ private:
     InterruptButton _btnPhDown;
     std::vector<EnvData> _pendingEnv;
     std::vector<PumpData> _pendingPump;
+    float _durationActivatePump;
+    long _debounce;
     bool _isIdle();
     void _buttonsHandle();
     void _heartbeatHandle();

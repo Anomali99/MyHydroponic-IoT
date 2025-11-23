@@ -2,11 +2,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include "Config.h"
 
 enum ConnectionState
 {
-    IDLE,
+    NONE,
     DISCONNECTED,
     CONNECTING,
     CONNECTED
@@ -17,7 +16,7 @@ class NetworkManagement
 private:
     const char *NTP_SERVER;
     const long GMTOFFSET_SEC;
-    const int DAYLIGHTOFFSET_SEC = 0;
+    const int DAYLIGHTOFFSET_SEC;
     WiFiClient _wifiClient;
 
 public:

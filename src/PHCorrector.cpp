@@ -1,4 +1,5 @@
 #include "PHCorrector.h"
+#include "Config.h"
 
 PHCorrector::PHCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
                                                   _levelPhUpSensor(UltrasonicSensor(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN)),
@@ -6,14 +7,14 @@ PHCorrector::PHCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
                                                   _pinPumpPhUp(PH_UP_PUMP_PIN),
                                                   _pinPumpPhDown(PH_DOWN_PUMP_PIN),
                                                   _warningStatus(false),
-                                                  _phUpTankVolume(phUpTankVolume),
-                                                  _phDownTankVolume(phDownTankVolume),
-                                                  _phUpTankMaxLevel(phUpTankMaxLevel),
-                                                  _phDownTankMaxLevel(phDownTankMaxLevel),
-                                                  _phUpTankMinLevel(phUpTankMinLevel),
-                                                  _phDownTankMinLevel(phDownTankMinLevel),
-                                                  _phUpTankHeight(phUpTankHeight),
-                                                  _phDownTankHeight(phDownTankHeight) {}
+                                                  _phUpTankVolume(1.0),
+                                                  _phDownTankVolume(1.0),
+                                                  _phUpTankMaxLevel(40.0),
+                                                  _phDownTankMaxLevel(40.0),
+                                                  _phUpTankMinLevel(10.0),
+                                                  _phDownTankMinLevel(10.0),
+                                                  _phUpTankHeight(60.0),
+                                                  _phDownTankHeight(60.0) {}
 
 void PHCorrector::setup()
 {

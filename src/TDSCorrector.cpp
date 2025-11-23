@@ -1,18 +1,19 @@
 #include "TDSCorrector.h"
+#include "Config.h"
 
 TDSCorrector::TDSCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
                                                     _levelASensor(UltrasonicSensor(TDS_A_US_TRIG_PIN, TDS_A_US_ECHO_PIN)),
                                                     _levelBSensor(UltrasonicSensor(TDS_B_US_TRIG_PIN, TDS_B_US_ECHO_PIN)),
+                                                    _pinPump(TDS_TDS_PUMP_PIN),
                                                     _warningStatus(false),
-                                                    _ATankVolume(ATankVolume),
-                                                    _BTankVolume(BTankVolume),
-                                                    _ATankMaxLevel(ATankMaxLevel),
-                                                    _BTankMaxLevel(BTankMaxLevel),
-                                                    _ATankMinLevel(ATankMinLevel),
-                                                    _BTankMinLevel(BTankMinLevel),
-                                                    _ATankHeight(ATankHeight),
-                                                    _BTankHeight(BTankHeight),
-                                                    _pinPump(TDS_TDS_PUMP_PIN)
+                                                    _ATankVolume(1.0),
+                                                    _BTankVolume(1.0),
+                                                    _ATankMaxLevel(40.0),
+                                                    _BTankMaxLevel(40.0),
+                                                    _ATankMinLevel(10.0),
+                                                    _BTankMinLevel(10.0),
+                                                    _ATankHeight(60.0),
+                                                    _BTankHeight(60.0)
 {
 }
 
