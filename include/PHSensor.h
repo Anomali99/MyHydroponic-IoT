@@ -8,10 +8,10 @@
 class PHSensor
 {
 private:
-    Adafruit_ADS1115 _ads;
+    Adafruit_ADS1115 &_ads;
     byte _pin;
 
 public:
-    PHSensor(Adafruit_ADS1115 ads, byte pin);
+    PHSensor(Adafruit_ADS1115 &ads, byte pin);
     float readPh();
 };

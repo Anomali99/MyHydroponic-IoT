@@ -1,7 +1,7 @@
 #include "MainTank.h"
 #include "Config.h"
 
-MainTank::MainTank(Adafruit_MCP23X17 mcp)
+MainTank::MainTank(Adafruit_MCP23X17 &mcp)
     : _mcp(mcp),
       _levelSensor(UltrasonicSensor(MT_US_TRIG_PIN, MT_US_ECHO_PIN)),
       _pinValve(MT_MIXER_PIN),
@@ -12,6 +12,8 @@ void MainTank::setup()
     _levelSensor.setup();
     _mcp.pinMode(_pinValve, OUTPUT);
     _mcp.pinMode(_pinMixer, OUTPUT);
+    _mcp.digitalWrite(_pinValve, HIGH);
+    _mcp.digitalWrite(_pinMixer, HIGH);
 }
 
 void MainTank::loop()
@@ -33,10 +35,10 @@ void MainTank::loop()
 
 void MainTank::activeMixer()
 {
-    _mcp.digitalWrite(_pinMixer, HIGH);
+    _mcp.digitalWrite(_pinMixer, LOW);
     delay(3000);
 
-    _mcp.digitalWrite(_pinMixer, LOW);
+    _mcp.digitalWrite(_pinMixer, HIGH);
 }
 
 float MainTank::getLevelCm()
@@ -50,7 +52,7 @@ float MainTank::getLevelCm()
         unsigned long lastChangeTime = millis();
         bool timeoutOccurred = false;
 
-        _mcp.digitalWrite(_pinValve, HIGH);
+        _mcp.digitalWrite(_pinValve, LOW);
 
         while (currentLevel <= _maxLevel)
         {
@@ -74,7 +76,7 @@ float MainTank::getLevelCm()
             delay(100);
         }
 
-        _mcp.digitalWrite(_pinValve, LOW);
+        _mcp.digitalWrite(_pinValve, HIGH);
     }
 
     return currentLevel;

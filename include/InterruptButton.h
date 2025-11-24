@@ -5,16 +5,15 @@ class InterruptButton
 {
 private:
     byte _pin;
-    volatile bool _btnPressed;
-    volatile unsigned long _lastPress;
-    static void IRAM_ATTR _staticBtnHandle();
+    bool _btnPressed;
+    unsigned long _lastPress;
 
 public:
-    static InterruptButton *g_instance;
     InterruptButton(byte pin);
     void setup();
+    void update();
     bool isBtnPressed();
-    long getLastPress();
+    unsigned long getLastPress();
     void setBtnPressed(bool status);
-    void setLastPress(long time);
+    void setLastPress(unsigned long time);
 };

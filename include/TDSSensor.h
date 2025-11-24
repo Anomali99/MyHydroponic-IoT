@@ -9,10 +9,10 @@
 class TDSSensor
 {
 private:
-    Adafruit_ADS1115 _ads;
+    Adafruit_ADS1115 &_ads;
     byte _pin;
 
 public:
-    TDSSensor(Adafruit_ADS1115 ads, byte pin);
+    TDSSensor(Adafruit_ADS1115 &ads, byte pin);
     float readTDS(float temp = 25.0);
 };

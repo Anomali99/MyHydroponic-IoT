@@ -21,6 +21,7 @@ class LCDDisplay
 private:
     LiquidCrystal_I2C _lcd;
     uint8_t _currentPage;
+    EnvData _data;
     const uint8_t _maxPages = 4;
     String _getShortTime(const String &datetime);
     void _displayPage0(const EnvData &data);
@@ -31,6 +32,7 @@ private:
 public:
     LCDDisplay(uint8_t lcdAddress);
     void setup();
+    void loop();
     void clear();
     void showData(const EnvData &data);
     void nextPage();

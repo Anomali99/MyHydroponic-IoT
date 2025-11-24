@@ -1,7 +1,7 @@
 #include "LCDDisplay.h"
 
 LCDDisplay::LCDDisplay(uint8_t lcdAddress)
-    : _lcd(lcdAddress, 16, 2), _currentPage(0)
+    : _lcd(lcdAddress, 16, 2)
 {
 }
 
@@ -12,6 +12,18 @@ void LCDDisplay::setup()
     _lcd.clear();
 }
 
+void LCDDisplay::loop()
+{
+    static unsigned long lastTime = 0;
+    unsigned long now = millis();
+
+    if (now - lastTime > 1500)
+    {
+        lastTime = now;
+        nextPage();
+    }
+}
+
 void LCDDisplay::clear()
 {
     _lcd.clear();
@@ -20,31 +32,34 @@ void LCDDisplay::clear()
 void LCDDisplay::showData(const EnvData &data)
 {
     _lcd.clear();
+    _currentPage = 0;
+    _data = data;
+    _displayPage0(_data);
+}
+
+void LCDDisplay::nextPage()
+{
+    _currentPage = (_currentPage + 1) % _maxPages;
 
     switch (_currentPage)
     {
     case 0:
-        _displayPage0(data);
+        _displayPage0(_data);
         break;
     case 1:
-        _displayPage1(data);
+        _displayPage1(_data);
         break;
     case 2:
-        _displayPage2(data);
+        _displayPage2(_data);
         break;
     case 3:
-        _displayPage3(data);
+        _displayPage3(_data);
         break;
     default:
         _lcd.setCursor(0, 0);
         _lcd.print("ERROR PAGE!");
         break;
     }
-}
-
-void LCDDisplay::nextPage()
-{
-    _currentPage = (_currentPage + 1) % _maxPages;
 }
 
 void LCDDisplay::showMessage(const String &line1, const String &line2)

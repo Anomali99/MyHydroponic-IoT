@@ -36,9 +36,9 @@ PhysicalControl::PhysicalControl() : _mcp(),
 
 void PhysicalControl::setup()
 {
-    _ads.begin();
+    _ads.begin(0x48);
     _ads.setGain(GAIN_TWOTHIRDS);
-    _mcp.begin_I2C();
+    _mcp.begin_I2C(0x20);
 
     _mcp.pinMode(PC_LED_HEARTBEAT_PIN, OUTPUT);
     _mcp.pinMode(PC_LED_WIFI_PIN, OUTPUT);
@@ -47,6 +47,8 @@ void PhysicalControl::setup()
     _mcp.pinMode(PC_LED_READ_ENV_PIN, OUTPUT);
     _mcp.pinMode(PC_LED_ADD_EVENT_PIN, OUTPUT);
     _mcp.pinMode(PC_BUZZER_PIN, OUTPUT);
+
+    _mcp.digitalWrite(PC_BUZZER_PIN, LOW);
 
     _display.setup();
     _networkManagement.setup();
@@ -68,6 +70,7 @@ void PhysicalControl::loop()
     _networkManagement.loop();
     _MQTTManagement.loop();
     _mainTank.loop();
+    _display.loop();
 
     _buttonsHandle();
     _heartbeatHandle();
@@ -80,7 +83,9 @@ bool PhysicalControl::_isIdle()
     {
         _mcp.digitalWrite(PC_BUZZER_PIN, HIGH);
         delay(200);
-        _mcp.digitalWrite(PC_BUZZER_PIN, HIGH);
+        _mcp.digitalWrite(PC_BUZZER_PIN, LOW);
+
+        return false;
     }
 
     return true;
@@ -89,21 +94,21 @@ bool PhysicalControl::_isIdle()
 void PhysicalControl::_heartbeatHandle()
 {
     static unsigned long lastHeartbeat = 0;
-    static unsigned long heartbeatState = false;
+    static unsigned long heartbeatState = 0;
     unsigned long now = millis();
 
     if (now - lastHeartbeat > 500)
     {
         lastHeartbeat = now;
-        heartbeatState = !heartbeatState;
-        _mcp.digitalWrite(PC_LED_HEARTBEAT_PIN, heartbeatState ? HIGH : LOW);
+        heartbeatState = heartbeatState == 0 ? 1 : 0;
+        _mcp.digitalWrite(PC_LED_HEARTBEAT_PIN, heartbeatState == 1 ? HIGH : LOW);
     }
 }
 
 void PhysicalControl::_warningHandle()
 {
     static unsigned long lastWarning = 0;
-    static unsigned long warningState = false;
+    static unsigned long warningState = 0;
 
     if (_mainTank.isWarning(), _PHCorrector.isWarning(), _TDSCorrector.isWarning() || warningState)
     {
@@ -112,21 +117,26 @@ void PhysicalControl::_warningHandle()
         if (now - lastWarning > 200)
         {
             lastWarning = now;
-            warningState = !warningState;
-            _mcp.digitalWrite(PC_LED_WARNING_PIN, warningState ? HIGH : LOW);
-            _mcp.digitalWrite(PC_BUZZER_PIN, warningState ? HIGH : LOW);
+            warningState = warningState == 0 ? 1 : 0;
+            _mcp.digitalWrite(PC_LED_WARNING_PIN, warningState == 1 ? HIGH : LOW);
+            _mcp.digitalWrite(PC_BUZZER_PIN, warningState == 1 ? HIGH : LOW);
         }
     }
 }
 
 void PhysicalControl::_buttonsHandle()
 {
+    _btnReconnect.update();
+    _btnReadEnv.update();
+    _btnNutrition.update();
+    _btnPhUp.update();
+    _btnPhDown.update();
+
     unsigned long now = millis();
     bool anyButtonPressed = _btnReconnect.isBtnPressed() || _btnReadEnv.isBtnPressed() || _btnNutrition.isBtnPressed() || _btnPhUp.isBtnPressed() || _btnPhDown.isBtnPressed();
 
     if (anyButtonPressed)
     {
-        noInterrupts();
 
         if (_btnReconnect.isBtnPressed() && (now - _btnReconnect.getLastPress() > _debounce))
         {
@@ -163,8 +173,6 @@ void PhysicalControl::_buttonsHandle()
             _btnPhDown.setLastPress(now);
             _pumpHandle(PH_DOWN);
         }
-
-        interrupts();
     }
 }
 
@@ -228,6 +236,8 @@ void PhysicalControl::_activatePumpHandle(String payload)
 
         else if (pump == "PH_DOWN")
             _PHCorrector.activePhDownPump(duration);
+
+        _readEnvironmentHandle();
     }
 }
 
@@ -262,7 +272,7 @@ void PhysicalControl::_readEnvironmentHandle()
 
     char buffer[200];
     serializeJson(json, buffer);
-    bool status = _MQTTManagement.publish("environment/data", buffer);
+    bool status = _MQTTManagement.publish("environment/data", buffer, true);
 
     if (!status)
         _pendingEnv.push_back(data);
@@ -275,8 +285,8 @@ void PhysicalControl::_readEnvironmentHandle()
 
 void PhysicalControl::_pumpHandle(PumpType type)
 {
-    if (_isIdle())
-        return;
+    // if (_isIdle())
+    //     return;
 
     _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, HIGH);
     _status = ADD_CORRECTOR;
@@ -305,6 +315,8 @@ void PhysicalControl::_pumpHandle(PumpType type)
     if (!status)
         _pendingPump.push_back(data);
 
-    _status = IDLE;
+    // _status = IDLE;
     _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, LOW);
+
+    _readEnvironmentHandle();
 }

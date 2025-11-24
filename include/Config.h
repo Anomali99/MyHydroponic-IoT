@@ -2,12 +2,12 @@
 #include <Adafruit_ADS1X15.h>
 #include <vector>
 
-#define WIFI_SSID "NamaSSID"
-#define WIFI_PASS "Password"
+#define WIFI_SSID "Kembar Dua"
+#define WIFI_PASS "sasa1234"
 
-#define MQTT_BROKER "broker.hivemq.com"
-#define MQTT_USER "Username"
-#define MQTT_PASS "Password"
+#define MQTT_BROKER "192.168.1.11"
+#define MQTT_USER "esp_user"
+#define MQTT_PASS "5127"
 #define MQTT_PORT 1883
 
 // Main Tank Config

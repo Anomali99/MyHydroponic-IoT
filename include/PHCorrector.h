@@ -14,14 +14,14 @@ private:
     float _phDownTankMinLevel = 10.0;
     float _phUpTankHeight = 60.0;
     float _phDownTankHeight = 60.0;
-    Adafruit_MCP23X17 _mcp;
+    Adafruit_MCP23X17 &_mcp;
     UltrasonicSensor _levelPhUpSensor;
     UltrasonicSensor _levelPhDownSensor;
     byte _pinPumpPhUp;
     byte _pinPumpPhDown;
 
 public:
-    PHCorrector(Adafruit_MCP23X17 mcp);
+    PHCorrector(Adafruit_MCP23X17 &mcp);
     void setup();
     void loop();
     void activePhUpPump(float duration);

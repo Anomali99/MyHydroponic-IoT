@@ -1,10 +1,10 @@
 #include "TDSCorrector.h"
 #include "Config.h"
 
-TDSCorrector::TDSCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
-                                                    _levelASensor(UltrasonicSensor(TDS_A_US_TRIG_PIN, TDS_A_US_ECHO_PIN)),
-                                                    _levelBSensor(UltrasonicSensor(TDS_B_US_TRIG_PIN, TDS_B_US_ECHO_PIN)),
-                                                    _pinPump(TDS_TDS_PUMP_PIN)
+TDSCorrector::TDSCorrector(Adafruit_MCP23X17 &mcp) : _mcp(mcp),
+                                                     _levelASensor(UltrasonicSensor(TDS_A_US_TRIG_PIN, TDS_A_US_ECHO_PIN)),
+                                                     _levelBSensor(UltrasonicSensor(TDS_B_US_TRIG_PIN, TDS_B_US_ECHO_PIN)),
+                                                     _pinPump(TDS_TDS_PUMP_PIN)
 {
 }
 
@@ -13,6 +13,7 @@ void TDSCorrector::setup()
     _levelASensor.setup();
     _levelBSensor.setup();
     _mcp.pinMode(_pinPump, OUTPUT);
+    _mcp.digitalWrite(_pinPump, HIGH);
 }
 
 void TDSCorrector::loop()
@@ -34,9 +35,9 @@ void TDSCorrector::loop()
 
 void TDSCorrector::activePump(float duration)
 {
-    _mcp.digitalWrite(_pinPump, HIGH);
-    delay(duration * 1000);
     _mcp.digitalWrite(_pinPump, LOW);
+    delay(duration * 1000);
+    _mcp.digitalWrite(_pinPump, HIGH);
 }
 
 float TDSCorrector::getALevelCm()

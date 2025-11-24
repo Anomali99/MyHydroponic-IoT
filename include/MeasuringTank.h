@@ -14,8 +14,8 @@ struct EnvironmentData
 class MeasuringTank
 {
 private:
-    Adafruit_ADS1115 _ads;
-    Adafruit_MCP23X17 _mcp;
+    Adafruit_ADS1115 &_ads;
+    Adafruit_MCP23X17 &_mcp;
     PHSensor _phSensor;
     TDSSensor _tdsSensor;
     TemperatureSensor _tempSensor;
@@ -24,8 +24,8 @@ private:
 
 public:
     MeasuringTank(
-        Adafruit_ADS1115 ads,
-        Adafruit_MCP23X17 mcp);
+        Adafruit_ADS1115 &ads,
+        Adafruit_MCP23X17 &mcp);
     void setup();
     EnvironmentData readData();
 };

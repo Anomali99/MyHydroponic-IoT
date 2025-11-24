@@ -1,11 +1,11 @@
 #include "PHCorrector.h"
 #include "Config.h"
 
-PHCorrector::PHCorrector(Adafruit_MCP23X17 mcp) : _mcp(mcp),
-                                                  _levelPhUpSensor(UltrasonicSensor(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN)),
-                                                  _levelPhDownSensor(UltrasonicSensor(PH_DOWN_US_TRIG_PIN, PH_DOWN_US_ECHO_PIN)),
-                                                  _pinPumpPhUp(PH_UP_PUMP_PIN),
-                                                  _pinPumpPhDown(PH_DOWN_PUMP_PIN) {}
+PHCorrector::PHCorrector(Adafruit_MCP23X17 &mcp) : _mcp(mcp),
+                                                   _levelPhUpSensor(UltrasonicSensor(PH_UP_US_TRIG_PIN, PH_UP_US_ECHO_PIN)),
+                                                   _levelPhDownSensor(UltrasonicSensor(PH_DOWN_US_TRIG_PIN, PH_DOWN_US_ECHO_PIN)),
+                                                   _pinPumpPhUp(PH_UP_PUMP_PIN),
+                                                   _pinPumpPhDown(PH_DOWN_PUMP_PIN) {}
 
 void PHCorrector::setup()
 {
@@ -13,6 +13,8 @@ void PHCorrector::setup()
     _levelPhDownSensor.setup();
     _mcp.pinMode(_pinPumpPhUp, OUTPUT);
     _mcp.pinMode(_pinPumpPhDown, OUTPUT);
+    _mcp.digitalWrite(_pinPumpPhUp, HIGH);
+    _mcp.digitalWrite(_pinPumpPhDown, HIGH);
 }
 
 void PHCorrector::loop()
@@ -34,16 +36,16 @@ void PHCorrector::loop()
 
 void PHCorrector::activePhUpPump(float duration)
 {
-    _mcp.digitalWrite(_pinPumpPhUp, HIGH);
-    delay(duration * 1000);
     _mcp.digitalWrite(_pinPumpPhUp, LOW);
+    delay(duration * 1000);
+    _mcp.digitalWrite(_pinPumpPhUp, HIGH);
 }
 
 void PHCorrector::activePhDownPump(float duration)
 {
-    _mcp.digitalWrite(_pinPumpPhDown, HIGH);
-    delay(duration * 1000);
     _mcp.digitalWrite(_pinPumpPhDown, LOW);
+    delay(duration * 1000);
+    _mcp.digitalWrite(_pinPumpPhDown, HIGH);
 }
 
 float PHCorrector::getPhUpLevelCm()

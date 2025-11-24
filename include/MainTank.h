@@ -12,13 +12,13 @@ private:
     float _tankHeight = 60.0;
     float _minLevel = 10.0;
     float _maxLevel = 40.0;
-    Adafruit_MCP23X17 _mcp;
+    Adafruit_MCP23X17 &_mcp;
     UltrasonicSensor _levelSensor;
     byte _pinValve;
     byte _pinMixer;
 
 public:
-    MainTank(Adafruit_MCP23X17 mcp);
+    MainTank(Adafruit_MCP23X17 &mcp);
     void setup();
     void loop();
     void activeMixer();

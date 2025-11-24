@@ -1,6 +1,6 @@
 #include "TDSSensor.h"
 
-TDSSensor::TDSSensor(Adafruit_ADS1115 ads, byte pin) : _ads(ads), _pin(pin) {}
+TDSSensor::TDSSensor(Adafruit_ADS1115 &ads, byte pin) : _ads(ads), _pin(pin) {}
 
 float TDSSensor::readTDS(float temp)
 {
