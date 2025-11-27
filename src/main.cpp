@@ -1,15 +1,15 @@
 #include <Arduino.h>
-#include "PhysicalControl.h"
+#include "DeviceIoT.h"
 
-PhysicalControl physicalControl;
+DeviceIoT deviceIoT;
 
 void setup()
 {
   Serial.begin(115200);
-  physicalControl.setup();
+  deviceIoT.setup();
 }
 
 void loop()
 {
-  physicalControl.loop();
+  deviceIoT.loop();
 }

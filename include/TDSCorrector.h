@@ -5,10 +5,9 @@
 class TDSCorrector
 {
 private:
-    Adafruit_MCP23X17 &_mcp;
-    UltrasonicSensor _levelASensor;
-    UltrasonicSensor _levelBSensor;
-    byte _pinPump;
+    unsigned long _lastTimePump = 0;
+    float _pumpDuration = 0;
+    bool _isActivePump = false;
     bool _warningStatus = false;
     float _ATankVolume = 1.0;
     float _BTankVolume = 1.0;
@@ -18,6 +17,10 @@ private:
     float _BTankMinLevel = 10.0;
     float _ATankHeight = 60.0;
     float _BTankHeight = 60.0;
+    Adafruit_MCP23X17 &_mcp;
+    UltrasonicSensor _levelASensor;
+    UltrasonicSensor _levelBSensor;
+    byte _pinPump;
 
 public:
     TDSCorrector(Adafruit_MCP23X17 &mcp);
@@ -29,4 +32,5 @@ public:
     float getACurrentVolume();
     float getBCurrentVolume();
     bool isWarning();
+    bool isActivePump();
 };

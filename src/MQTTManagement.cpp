@@ -1,12 +1,7 @@
 #include "MQTTManagement.h"
-#include "Config.h"
 
 MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(connection),
-                                                                _mqttClient(connection.getClient()),
-                                                                _broker(MQTT_BROKER),
-                                                                _username(MQTT_USER),
-                                                                _password(MQTT_PASS),
-                                                                _port(MQTT_PORT)
+                                                                _mqttClient()
 {
     _clientId = "ESP32Client-";
     _clientId += String(random(0xffff), HEX);
@@ -16,67 +11,70 @@ MQTTManagement::MQTTManagement(NetworkManagement &connection) : _connection(conn
 
 void MQTTManagement::setup()
 {
-    _mqttClient.setServer(_broker, _port);
-    _mqttClient.setCallback([this](char *topic, byte *payload, unsigned int length)
-                            { this->callback(topic, payload, length); });
-}
+    _mqttClient.onConnect([this](bool sessionPresent)
+                          { this->_onMqttConnect(sessionPresent); });
 
-void MQTTManagement::callback(char *topic, byte *payload, unsigned int length)
-{
-    _activityStartTime = millis();
+    _mqttClient.onDisconnect([this](AsyncMqttClientDisconnectReason reason)
+                             { this->_onMqttDisconnect(reason); });
 
-    char message[length + 1];
-    memcpy(message, payload, length);
-    message[length] = '\0';
+    _mqttClient.onMessage([this](char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+                          { this->_onMqttMessage(topic, payload, properties, len, index, total); });
 
-    String strTopic = String(topic);
-    String strMessage = String(message);
+    _mqttClient.onPublish([this](uint16_t packetId)
+                          { this->_onMqttPublish(packetId); });
 
-    if (messageReceivedCallback)
-        messageReceivedCallback(strTopic, strMessage);
+    _mqttClient.setServer(_host, _port);
+
+    _mqttClient.setCredentials(_username, _password);
+
+    _mqttClient.setWill(_willTopic, 1, true, "0");
+
+    if (statusCallback)
+    {
+        statusCallback(false);
+    }
+
+    Serial.println("--- MQTT Setup ---");
+    Serial.printf("Broker Host: %s, Port: %d\n", MQTT_HOST, _port);
+    Serial.printf("Client ID: %s\n", _clientId.c_str());
+    Serial.println("------------------");
 }
 
 void MQTTManagement::loop()
 {
     static unsigned long lastConnectionCheck = 0;
+    static unsigned long lastBlink = 0;
+    static unsigned long blinkState = 0;
     unsigned long now = millis();
 
-    if (now - lastConnectionCheck > 5000)
+    if (now - _activityStartTime < ACTIVITY_DURATION)
     {
-        lastConnectionCheck = now;
-        if (!_mqttClient.connected())
+        if (now - lastBlink > 500)
         {
+            lastBlink = now;
+            blinkState = blinkState == 0 ? 1 : 0;
             if (statusCallback)
-                statusCallback(false);
-            reconnect();
+                statusCallback(blinkState == 1 ? HIGH : LOW);
         }
-        else
+    }
+    else
+    {
+        if (now - lastConnectionCheck > 5000 || blinkState == 0)
         {
-            if (statusCallback && (now - _activityStartTime > ACTIVITY_DURATION))
+            blinkState = 1;
+            lastConnectionCheck = now;
+            if (!_mqttClient.connected())
+            {
+                if (statusCallback)
+                    statusCallback(false);
+                reconnect();
+            }
+            else
             {
                 statusCallback(true);
             }
         }
     }
-
-    if (_mqttClient.connected())
-    {
-        if (now - _activityStartTime < ACTIVITY_DURATION)
-        {
-            if (statusCallback)
-            {
-                statusCallback(false);
-                statusCallback(true);
-            }
-        }
-        else if (now - lastConnectionCheck > 5000)
-        {
-            if (statusCallback)
-                statusCallback(true);
-        }
-    }
-
-    _mqttClient.loop();
 }
 
 void MQTTManagement::reconnect()
@@ -88,37 +86,87 @@ void MQTTManagement::reconnect()
         return;
     }
 
-    if (_mqttClient.connect(_clientId.c_str(), _username, _password,
-                            _willTopic, 1, true, _willPayload))
+    if (!_mqttClient.connected())
     {
-        if (statusCallback)
-            statusCallback(true);
-
-        publish(_willTopic, "1", true);
-
-        for (const String &topic : _topicsToSubscribe)
-            subscribe(topic.c_str());
-    }
-    else
-    {
-        if (statusCallback)
-            statusCallback(false);
+        _mqttClient.connect();
     }
 }
 
 bool MQTTManagement::publish(const char *topic, const char *payload, bool retain)
 {
     if (_mqttClient.connected())
-        return _mqttClient.publish(topic, payload, retain);
+    {
+        _activityStartTime = millis();
+        uint16_t packetId = _mqttClient.publish(topic, 1, retain, payload);
 
+        if (packetId > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     else
+    {
         return false;
+    }
 }
 
 bool MQTTManagement::subscribe(const char *topic)
 {
     if (_mqttClient.connected())
-        return _mqttClient.subscribe(topic);
+    {
+        uint16_t packetId = _mqttClient.subscribe(topic, 1);
+        if (packetId > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     else
+    {
         return false;
+    }
+}
+
+void MQTTManagement::_onMqttConnect(bool sessionPresent)
+{
+    publish(_willTopic, "1", true);
+
+    for (const String &topic : _topicsToSubscribe)
+        subscribe(topic.c_str());
+
+    if (statusCallback)
+        statusCallback(true);
+}
+
+void MQTTManagement::_onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
+{
+    if (statusCallback)
+        statusCallback(false);
+}
+
+void MQTTManagement::_onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+{
+    _activityStartTime = millis();
+
+    String payloadStr;
+    payloadStr.reserve(len + 1);
+    for (size_t i = 0; i < len; i++)
+    {
+        payloadStr += payload[i];
+    }
+
+    if (messageReceivedCallback)
+        messageReceivedCallback(String(topic), payloadStr);
+}
+
+void MQTTManagement::_onMqttPublish(uint16_t packetId)
+{
+    _activityStartTime = millis();
 }

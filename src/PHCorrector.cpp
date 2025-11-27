@@ -22,6 +22,16 @@ void PHCorrector::loop()
     static unsigned long lastLevelCheck = 0;
     unsigned long now = millis();
 
+    if (_isActivePump)
+    {
+        if (now - _lastTimePump >= _pumpDuration)
+        {
+            _mcp.digitalWrite(_pinPumpPhUp, HIGH);
+            _mcp.digitalWrite(_pinPumpPhDown, HIGH);
+            _isActivePump = false;
+        }
+    }
+
     if (now - lastLevelCheck >= 5000)
     {
         lastLevelCheck = now;
@@ -36,16 +46,24 @@ void PHCorrector::loop()
 
 void PHCorrector::activePhUpPump(float duration)
 {
-    _mcp.digitalWrite(_pinPumpPhUp, LOW);
-    delay(duration * 1000);
-    _mcp.digitalWrite(_pinPumpPhUp, HIGH);
+    if (!_isActivePump)
+    {
+        _isActivePump = true;
+        _pumpDuration = duration * 1000;
+        _lastTimePump = millis();
+        _mcp.digitalWrite(_pinPumpPhUp, LOW);
+    }
 }
 
 void PHCorrector::activePhDownPump(float duration)
 {
-    _mcp.digitalWrite(_pinPumpPhDown, LOW);
-    delay(duration * 1000);
-    _mcp.digitalWrite(_pinPumpPhDown, HIGH);
+    if (!_isActivePump)
+    {
+        _isActivePump = true;
+        _pumpDuration = duration * 1000;
+        _lastTimePump = millis();
+        _mcp.digitalWrite(_pinPumpPhDown, LOW);
+    }
 }
 
 float PHCorrector::getPhUpLevelCm()
@@ -83,4 +101,9 @@ float PHCorrector::getPhDownCurrentVolume()
 bool PHCorrector::isWarning()
 {
     return _warningStatus;
+}
+
+bool PHCorrector::isActivePump()
+{
+    return _isActivePump;
 }

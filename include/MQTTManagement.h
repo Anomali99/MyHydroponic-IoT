@@ -1,31 +1,33 @@
 #pragma once
 #include <Arduino.h>
-#include <PubSubClient.h>
+#include <AsyncMqttClient.h>
 #include <WiFi.h>
 #include <functional>
 #include <vector>
 #include <string>
 #include "NetworkManagement.h"
+#include "Config.h"
 
 class MQTTManagement
 {
 private:
     NetworkManagement &_connection;
-    PubSubClient _mqttClient;
-    const char *_broker;
-    const char *_username;
-    const char *_password;
-    int _port;
+    AsyncMqttClient _mqttClient;
+    const IPAddress _host = MQTT_HOST;
+    const char *_username = MQTT_USER;
+    const char *_password = MQTT_PASS;
+    int _port = MQTT_PORT;
     String _clientId;
-    unsigned long _lastConnectionCheck;
     const char *_willTopic = "device/status";
-    const char *_willPayload = "0";
     std::vector<String> _topicsToSubscribe = {"environment/refresh",
                                               "pump/automation",
                                               "pump/manually"};
     unsigned long _activityStartTime = 0;
-    const unsigned long ACTIVITY_DURATION = 100;
-    void callback(char *topic, byte *payload, unsigned int length);
+    const unsigned long ACTIVITY_DURATION = 3000;
+    void _onMqttConnect(bool sessionPresent);
+    void _onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
+    void _onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
+    void _onMqttPublish(uint16_t packetId);
 
 public:
     std::function<void(String, String)> messageReceivedCallback;

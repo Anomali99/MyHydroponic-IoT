@@ -11,14 +11,25 @@ struct EnvironmentData
     float temp;
 };
 
+enum MeasuringState
+{
+    MEASURING_IDLE,
+    FILL_TANK,
+    READ_ENV,
+    CLEAN_TANK,
+};
+
 class MeasuringTank
 {
 private:
+    MeasuringState _statusState = MEASURING_IDLE;
+    unsigned long _lastTimeActivate = 0;
     Adafruit_ADS1115 &_ads;
     Adafruit_MCP23X17 &_mcp;
     PHSensor _phSensor;
     TDSSensor _tdsSensor;
     TemperatureSensor _tempSensor;
+    EnvironmentData _envData;
     byte _valvePin;
     byte _pumpPin;
 
@@ -27,5 +38,8 @@ public:
         Adafruit_ADS1115 &ads,
         Adafruit_MCP23X17 &mcp);
     void setup();
-    EnvironmentData readData();
+    void loop();
+    void startReadData();
+    MeasuringState getState();
+    EnvironmentData getData();
 };

@@ -20,7 +20,7 @@ void LCDDisplay::loop()
     if (now - lastTime > 1500)
     {
         lastTime = now;
-        nextPage();
+        _runText();
     }
 }
 
@@ -31,35 +31,10 @@ void LCDDisplay::clear()
 
 void LCDDisplay::showData(const EnvData &data)
 {
-    _lcd.clear();
-    _currentPage = 0;
-    _data = data;
-    _displayPage0(_data);
-}
+    _datetime = "Time:" + _getShortTime(data.datetime);
+    _dataMessage = "PH: " + String(data.ph, 2) + " TDS: " + String(data.tds, 0) + " Temp: " + String(data.temp, 2) + " MT: " + String(data.tankMain, 2) + " Up: " + String(data.tankPhUp, 2) + " Down: " + String(data.tankPhDown, 2) + " A: " + String(data.tankA, 2) + " B: " + String(data.tankB, 2) + " --- ";
 
-void LCDDisplay::nextPage()
-{
-    _currentPage = (_currentPage + 1) % _maxPages;
-
-    switch (_currentPage)
-    {
-    case 0:
-        _displayPage0(_data);
-        break;
-    case 1:
-        _displayPage1(_data);
-        break;
-    case 2:
-        _displayPage2(_data);
-        break;
-    case 3:
-        _displayPage3(_data);
-        break;
-    default:
-        _lcd.setCursor(0, 0);
-        _lcd.print("ERROR PAGE!");
-        break;
-    }
+    _scrollPosition = 0;
 }
 
 void LCDDisplay::showMessage(const String &line1, const String &line2)
@@ -86,50 +61,32 @@ String LCDDisplay::_getShortTime(const String &datetime)
     return datetime.substring(0, 8);
 }
 
-void LCDDisplay::_displayPage0(const EnvData &data)
+void LCDDisplay::_runText()
 {
-    _lcd.setCursor(0, 0);
-    _lcd.print("pH:");
-    _lcd.print(data.ph, 2);
-    _lcd.print(" TDS:");
-    _lcd.print(data.tds, 0);
+    const int LCD_WIDTH = 16;
+    int messageLength = _dataMessage.length();
+
+    if (messageLength > LCD_WIDTH)
+    {
+        String displayLine1 = _dataMessage.substring(_scrollPosition);
+        displayLine1 = displayLine1.substring(0, LCD_WIDTH);
+
+        _lcd.setCursor(0, 0);
+        _lcd.print(displayLine1);
+
+        _scrollPosition++;
+
+        if (_scrollPosition >= (messageLength - LCD_WIDTH + 3))
+        {
+            _scrollPosition = 0;
+        }
+    }
+    else
+    {
+        _lcd.setCursor(0, 0);
+        _lcd.print(_dataMessage.substring(0, LCD_WIDTH));
+    }
 
     _lcd.setCursor(0, 1);
-    _lcd.print("Time:" + _getShortTime(data.datetime));
-}
-
-void LCDDisplay::_displayPage1(const EnvData &data)
-{
-    _lcd.setCursor(0, 0);
-    _lcd.print("Temp:");
-    _lcd.print(data.temp, 1);
-    _lcd.print(" MT:");
-    _lcd.print(data.tankMain, 1);
-
-    _lcd.setCursor(0, 1);
-    _lcd.print("Time:" + _getShortTime(data.datetime));
-}
-
-void LCDDisplay::_displayPage2(const EnvData &data)
-{
-    _lcd.setCursor(0, 0);
-    _lcd.print("Up:");
-    _lcd.print(data.tankPhUp, 1);
-    _lcd.print(" Dn:");
-    _lcd.print(data.tankPhDown, 1);
-
-    _lcd.setCursor(0, 1);
-    _lcd.print("Time:" + _getShortTime(data.datetime));
-}
-
-void LCDDisplay::_displayPage3(const EnvData &data)
-{
-    _lcd.setCursor(0, 0);
-    _lcd.print("NutA:");
-    _lcd.print(data.tankA, 1);
-    _lcd.print(" B:");
-    _lcd.print(data.tankB, 1);
-
-    _lcd.setCursor(0, 1);
-    _lcd.print("Time:" + _getShortTime(data.datetime));
+    _lcd.print(_datetime);
 }

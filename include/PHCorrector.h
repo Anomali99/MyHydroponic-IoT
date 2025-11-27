@@ -5,6 +5,9 @@
 class PHCorrector
 {
 private:
+    unsigned long _lastTimePump = 0;
+    float _pumpDuration = 0;
+    bool _isActivePump = false;
     bool _warningStatus = false;
     float _phUpTankVolume = 1.0;
     float _phDownTankVolume = 1.0;
@@ -31,4 +34,5 @@ public:
     float getPhUpCurrentVolume();
     float getPhDownCurrentVolume();
     bool isWarning();
+    bool isActivePump();
 };

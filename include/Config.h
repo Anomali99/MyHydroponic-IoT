@@ -5,7 +5,7 @@
 #define WIFI_SSID "Kembar Dua"
 #define WIFI_PASS "sasa1234"
 
-#define MQTT_BROKER "192.168.1.11"
+#define MQTT_HOST IPAddress(192, 168, 1, 11)
 #define MQTT_USER "esp_user"
 #define MQTT_PASS "5127"
 #define MQTT_PORT 1883

@@ -3,9 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_MCP23X17.h>
 #include <Adafruit_ADS1X15.h>
-#include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <WiFi.h>
 #include <functional>
 #include <vector>
 #include <string>
@@ -35,14 +33,19 @@ struct PumpData
 enum StatusState
 {
     IDLE,
-    READ_ENV,
-    ADD_CORRECTOR
+    ENV_MIXING,
+    ENV_READING,
+    ENV_SENDING,
+    PUMP_ADDING,
+    PUMP_SENDING,
 };
 
-class PhysicalControl
+class DeviceIoT
 {
 private:
-    StatusState _status;
+    StatusState _statusState = IDLE;
+    float _durationActivatePump = 10;
+    long _debounce = 1000;
     Adafruit_MCP23X17 _mcp;
     Adafruit_ADS1115 _ads;
     LCDDisplay _display;
@@ -59,22 +62,23 @@ private:
     InterruptButton _btnPhDown;
     std::vector<EnvData> _pendingEnv;
     std::vector<PumpData> _pendingPump;
-    float _durationActivatePump = 10;
-    long _debounce = 1000;
     bool _isIdle();
     void _buttonsHandle();
     void _heartbeatHandle();
     void _warningHandle();
-    void _messageHandle(String topic, String payload);
+    void _mainProccessHandle();
     void _WifiStatusHandle(bool status);
     void _MQTTStatusHandle(bool status);
+    void _MQTTMessageHandle(String topic, String payload);
     void _refreshEnvHandle(String payload);
     void _activatePumpHandle(String payload);
-    void _readEnvironmentHandle();
-    void _pumpHandle(PumpType type);
+    void _startReadEnvironment();
+    void _startActivatePump(PumpType type, float duration);
+
+    void _resendPumpEnvHandle();
 
 public:
-    PhysicalControl();
+    DeviceIoT();
     void setup();
     void loop();
 };

@@ -7,6 +7,9 @@ class MainTank
 private:
     const unsigned long NO_CHANGE_TIMEOUT = 10000;
     const float LEVEL_INCREASE_THRESHOLD = 0.5;
+    unsigned long _lastTimeMixer = 0;
+    long _mixerDuration = 3000;
+    bool _isActiveMixer = false;
     bool _warningStatus = false;
     float _tankVolume = 2.0;
     float _tankHeight = 60.0;
@@ -25,4 +28,5 @@ public:
     float getLevelCm();
     float getCurrentVolume();
     bool isWarning();
+    bool isActiveMixer();
 };

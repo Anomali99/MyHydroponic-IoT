@@ -21,6 +21,15 @@ void TDSCorrector::loop()
     static unsigned long lastLevelCheck = 0;
     unsigned long now = millis();
 
+    if (_isActivePump)
+    {
+        if (now - _lastTimePump >= _pumpDuration)
+        {
+            _mcp.digitalWrite(_pinPump, HIGH);
+            _isActivePump = false;
+        }
+    }
+
     if (now - lastLevelCheck >= 5000)
     {
         lastLevelCheck = now;
@@ -35,9 +44,13 @@ void TDSCorrector::loop()
 
 void TDSCorrector::activePump(float duration)
 {
-    _mcp.digitalWrite(_pinPump, LOW);
-    delay(duration * 1000);
-    _mcp.digitalWrite(_pinPump, HIGH);
+    if (!_isActivePump)
+    {
+        _isActivePump = true;
+        _pumpDuration = duration * 1000;
+        _lastTimePump = millis();
+        _mcp.digitalWrite(_pinPump, LOW);
+    }
 }
 
 float TDSCorrector::getALevelCm()
@@ -75,4 +88,9 @@ float TDSCorrector::getBCurrentVolume()
 bool TDSCorrector::isWarning()
 {
     return _warningStatus;
+}
+
+bool TDSCorrector::isActivePump()
+{
+    return _isActivePump;
 }
