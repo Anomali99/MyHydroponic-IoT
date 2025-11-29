@@ -33,9 +33,11 @@ struct PumpData
 enum StatusState
 {
     IDLE,
+    ENV_START,
     ENV_MIXING,
     ENV_READING,
     ENV_SENDING,
+    PUMP_START,
     PUMP_ADDING,
     PUMP_SENDING,
 };
@@ -44,6 +46,8 @@ class DeviceIoT
 {
 private:
     StatusState _statusState = IDLE;
+    unsigned long _lastWarning = 0;
+    bool _warningState = false;
     float _durationActivatePump = 10;
     long _debounce = 1000;
     Adafruit_MCP23X17 _mcp;
@@ -74,7 +78,7 @@ private:
     void _activatePumpHandle(String payload);
     void _startReadEnvironment();
     void _startActivatePump(PumpType type, float duration);
-
+    void _sendTankNotificationHandle(String type, float volume);
     void _resendPumpEnvHandle();
 
 public:

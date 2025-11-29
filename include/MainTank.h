@@ -8,7 +8,10 @@ private:
     const unsigned long NO_CHANGE_TIMEOUT = 10000;
     const float LEVEL_INCREASE_THRESHOLD = 0.5;
     unsigned long _lastTimeMixer = 0;
+    unsigned long _lastTimeCheck = 0;
+    float _levelAtLastCheck = 0;
     long _mixerDuration = 3000;
+    bool _isAddingWater = false;
     bool _isActiveMixer = false;
     bool _warningStatus = false;
     float _tankVolume = 2.0;

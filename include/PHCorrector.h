@@ -8,7 +8,8 @@ private:
     unsigned long _lastTimePump = 0;
     float _pumpDuration = 0;
     bool _isActivePump = false;
-    bool _warningStatus = false;
+    bool _warningUpStatus = false;
+    bool _warningDownStatus = false;
     float _phUpTankVolume = 1.0;
     float _phDownTankVolume = 1.0;
     float _phUpTankMaxLevel = 40.0;
@@ -33,6 +34,7 @@ public:
     float getPhDownLevelCm();
     float getPhUpCurrentVolume();
     float getPhDownCurrentVolume();
-    bool isWarning();
+    bool isUpWarning();
+    bool isDownWarning();
     bool isActivePump();
 };

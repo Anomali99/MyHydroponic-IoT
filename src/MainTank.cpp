@@ -30,15 +30,28 @@ void MainTank::loop()
         }
     }
 
-    if (now - lastLevelCheck >= 5000)
+    if (_isAddingWater)
     {
-        lastLevelCheck = now;
-        float distance = _levelSensor.getDistanceCm();
-        float currentLevel = _tankHeight - distance;
-        if (currentLevel > _minLevel)
+        float currentLevel = getLevelCm();
+
+        if (currentLevel > _levelAtLastCheck + LEVEL_INCREASE_THRESHOLD)
+        {
+            _lastTimeCheck = now;
+            _levelAtLastCheck = currentLevel;
             _warningStatus = false;
-        else
+        }
+
+        if (now - _lastTimeCheck > NO_CHANGE_TIMEOUT)
+        {
             _warningStatus = true;
+        }
+
+        if (currentLevel >= _maxLevel)
+        {
+            _mcp.digitalWrite(_pinValve, HIGH);
+            _warningStatus = false;
+            _isAddingWater = false;
+        }
     }
 }
 
@@ -57,46 +70,24 @@ float MainTank::getLevelCm()
     float distance = _levelSensor.getDistanceCm();
     float currentLevel = _tankHeight - distance;
 
-    // if (currentLevel <= _minLevel)
-    // {
-    //     float levelAtLastCheck = currentLevel;
-    //     unsigned long lastChangeTime = millis();
-    //     bool timeoutOccurred = false;
-
-    //     _mcp.digitalWrite(_pinValve, LOW);
-
-    //     while (currentLevel <= _maxLevel)
-    //     {
-    //         unsigned long now = millis();
-
-    //         distance = _levelSensor.getDistanceCm();
-    //         currentLevel = _tankHeight - distance;
-
-    //         if (currentLevel > levelAtLastCheck + LEVEL_INCREASE_THRESHOLD)
-    //         {
-    //             levelAtLastCheck = currentLevel;
-    //             lastChangeTime = now;
-    //         }
-
-    //         if (now - lastChangeTime > NO_CHANGE_TIMEOUT)
-    //         {
-    //             timeoutOccurred = true;
-    //             break;
-    //         }
-
-    //         delay(100);
-    //     }
-
-    //     _mcp.digitalWrite(_pinValve, HIGH);
-    // }
-
     return currentLevel;
 }
 
 float MainTank::getCurrentVolume()
 {
-    float currenLevel = getLevelCm();
-    float currentVolume = _tankVolume * (currenLevel / _maxLevel);
+    float currentLevel = getLevelCm();
+
+    if (currentLevel < _minLevel && !_isAddingWater)
+    {
+        _isAddingWater = true;
+        _mcp.digitalWrite(_pinValve, LOW);
+
+        _lastTimeCheck = millis();
+        _levelAtLastCheck = currentLevel;
+        _warningStatus = false;
+    }
+
+    float currentVolume = _tankVolume * (currentLevel / _maxLevel);
 
     return currentVolume;
 }

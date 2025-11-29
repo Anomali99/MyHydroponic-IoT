@@ -30,15 +30,27 @@ void TDSCorrector::loop()
         }
     }
 
-    if (now - lastLevelCheck >= 5000)
+    if (now - lastLevelCheck >= 500)
     {
         lastLevelCheck = now;
-        float ALevel = getALevelCm();
-        float BLevel = getBLevelCm();
-        if (ALevel > _ATankMinLevel && BLevel > _BTankMinLevel)
-            _warningStatus = false;
-        else
-            _warningStatus = true;
+
+        if (_warningAStatus)
+        {
+            float ALevel = getALevelCm();
+            if (ALevel > _ATankMinLevel)
+            {
+                _warningAStatus = false;
+            }
+        }
+
+        if (_warningBStatus)
+        {
+            float BLevel = getBLevelCm();
+            if (BLevel > _BTankMinLevel)
+            {
+                _warningBStatus = false;
+            }
+        }
     }
 }
 
@@ -72,6 +84,12 @@ float TDSCorrector::getBLevelCm()
 float TDSCorrector::getACurrentVolume()
 {
     float currenLevel = getALevelCm();
+
+    if (currenLevel < _ATankMinLevel)
+    {
+        _warningAStatus = true;
+    }
+
     float currentVolume = _ATankVolume * (currenLevel / _ATankMaxLevel);
 
     return currentVolume;
@@ -80,14 +98,25 @@ float TDSCorrector::getACurrentVolume()
 float TDSCorrector::getBCurrentVolume()
 {
     float currenLevel = getBLevelCm();
+
+    if (currenLevel < _BTankMinLevel)
+    {
+        _warningBStatus = true;
+    }
+
     float currentVolume = _BTankVolume * (currenLevel / _BTankMaxLevel);
 
     return currentVolume;
 }
 
-bool TDSCorrector::isWarning()
+bool TDSCorrector::isAWarning()
 {
-    return _warningStatus;
+    return _warningAStatus;
+}
+
+bool TDSCorrector::isBWarning()
+{
+    return _warningBStatus;
 }
 
 bool TDSCorrector::isActivePump()

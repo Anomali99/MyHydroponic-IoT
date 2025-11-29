@@ -17,7 +17,7 @@ void LCDDisplay::loop()
     static unsigned long lastTime = 0;
     unsigned long now = millis();
 
-    if (now - lastTime > 1500)
+    if (now - lastTime > 1000)
     {
         lastTime = now;
         _runText();

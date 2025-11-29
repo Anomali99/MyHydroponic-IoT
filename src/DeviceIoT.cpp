@@ -46,6 +46,12 @@ void DeviceIoT::setup()
     _mcp.pinMode(PC_LED_ADD_EVENT_PIN, OUTPUT);
     _mcp.pinMode(PC_BUZZER_PIN, OUTPUT);
 
+    _mcp.digitalWrite(PC_LED_HEARTBEAT_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_WIFI_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_WARNING_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_MQTT_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_READ_ENV_PIN, LOW);
+    _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, LOW);
     _mcp.digitalWrite(PC_BUZZER_PIN, LOW);
 
     _display.setup();
@@ -70,6 +76,7 @@ void DeviceIoT::loop()
     _networkManagement.loop();
     _MQTTManagement.loop();
     _mainTank.loop();
+    _measuringTank.loop();
     _PHCorrector.loop();
     _TDSCorrector.loop();
     _display.loop();
@@ -84,9 +91,10 @@ bool DeviceIoT::_isIdle()
 {
     if (_statusState != IDLE)
     {
-        _mcp.digitalWrite(PC_BUZZER_PIN, HIGH);
-        delay(200);
-        _mcp.digitalWrite(PC_BUZZER_PIN, LOW);
+        _lastWarning = millis();
+        _warningState = !_warningState;
+        _mcp.digitalWrite(PC_LED_WARNING_PIN, _warningState ? HIGH : LOW);
+        _mcp.digitalWrite(PC_BUZZER_PIN, _warningState ? HIGH : LOW);
 
         return false;
     }
@@ -110,20 +118,32 @@ void DeviceIoT::_heartbeatHandle()
 
 void DeviceIoT::_warningHandle()
 {
-    static unsigned long lastWarning = 0;
-    static unsigned long warningState = 0;
+    static bool lastMainTankWarningStatus = false;
 
-    if (_mainTank.isWarning(), _PHCorrector.isWarning(), _TDSCorrector.isWarning() || warningState)
+    bool currentMainTankWarning = _mainTank.isWarning();
+    if (currentMainTankWarning && !lastMainTankWarningStatus)
+    {
+        _sendTankNotificationHandle("MAIN_TANK", _mainTank.getCurrentVolume());
+    }
+    lastMainTankWarningStatus = currentMainTankWarning;
+
+    bool isGlobalWarning = _warningState || _mainTank.isWarning() || _PHCorrector.isUpWarning() || _PHCorrector.isDownWarning() || _TDSCorrector.isAWarning() || _TDSCorrector.isBWarning();
+
+    if (isGlobalWarning)
     {
         unsigned long now = millis();
-
-        if (now - lastWarning > 500)
+        if (now - _lastWarning > 500)
         {
-            lastWarning = now;
-            warningState = warningState == 0 ? 1 : 0;
-            _mcp.digitalWrite(PC_LED_WARNING_PIN, warningState == 1 ? HIGH : LOW);
-            _mcp.digitalWrite(PC_BUZZER_PIN, warningState == 1 ? HIGH : LOW);
+            _lastWarning = now;
+            _warningState = !_warningState;
+            _mcp.digitalWrite(PC_LED_WARNING_PIN, _warningState ? HIGH : LOW);
+            _mcp.digitalWrite(PC_BUZZER_PIN, _warningState ? HIGH : LOW);
         }
+    }
+    else
+    {
+        _mcp.digitalWrite(PC_LED_WARNING_PIN, LOW);
+        _mcp.digitalWrite(PC_BUZZER_PIN, LOW);
     }
 }
 
@@ -152,29 +172,40 @@ void DeviceIoT::_buttonsHandle()
         {
             _btnReadEnv.setBtnPressed(false);
             _btnReadEnv.setLastPress(now);
-            _startReadEnvironment();
+            if (_isIdle())
+            {
+                _startReadEnvironment();
+            }
         }
 
         if (_btnNutrition.isBtnPressed() && (now - _btnNutrition.getLastPress() > _debounce))
         {
             _btnNutrition.setBtnPressed(false);
             _btnNutrition.setLastPress(now);
-            _startActivatePump(NUTRITION, _durationActivatePump);
-            ;
+            if (_isIdle())
+            {
+                _startActivatePump(NUTRITION, _durationActivatePump);
+            };
         }
 
         if (_btnPhUp.isBtnPressed() && (now - _btnPhUp.getLastPress() > _debounce))
         {
             _btnPhUp.setBtnPressed(false);
             _btnPhUp.setLastPress(now);
-            _startActivatePump(PH_UP, _durationActivatePump);
+            if (_isIdle())
+            {
+                _startActivatePump(PH_UP, _durationActivatePump);
+            }
         }
 
         if (_btnPhDown.isBtnPressed() && (now - _btnPhDown.getLastPress() > _debounce))
         {
             _btnPhDown.setBtnPressed(false);
             _btnPhDown.setLastPress(now);
-            _startActivatePump(PH_DOWN, _durationActivatePump);
+            if (_isIdle())
+            {
+                _startActivatePump(PH_DOWN, _durationActivatePump);
+            }
         }
     }
 }
@@ -240,6 +271,14 @@ void DeviceIoT::_mainProccessHandle()
         break;
     }
 
+    case ENV_START:
+    {
+        _mcp.digitalWrite(PC_LED_READ_ENV_PIN, HIGH);
+        _statusState = ENV_MIXING;
+        _mainTank.activeMixer();
+        break;
+    }
+
     case ENV_MIXING:
     {
         if (!_mainTank.isActiveMixer())
@@ -254,7 +293,7 @@ void DeviceIoT::_mainProccessHandle()
     {
         MeasuringState measuringState = _measuringTank.getState();
 
-        if (measuringState == CLEAN_TANK || measuringState == MEASURING_IDLE)
+        if (measuringState == MEASURING_IDLE)
         {
             EnvironmentData env = _measuringTank.getData();
 
@@ -281,7 +320,7 @@ void DeviceIoT::_mainProccessHandle()
     {
         EnvData sendingEnvData = _pendingEnv.back();
 
-        StaticJsonDocument<200> sendingEnvJson;
+        StaticJsonDocument<512> sendingEnvJson;
         sendingEnvJson["ph"] = sendingEnvData.ph;
         sendingEnvJson["tds"] = sendingEnvData.tds;
         sendingEnvJson["temp"] = sendingEnvData.temp;
@@ -292,15 +331,60 @@ void DeviceIoT::_mainProccessHandle()
         sendingEnvJson["tank_main"] = sendingEnvData.tankMain;
         sendingEnvJson["datetime"] = sendingEnvData.datetime;
 
-        char buffer[200];
+        char buffer[512];
         serializeJson(sendingEnvJson, buffer);
         bool status = _MQTTManagement.publish("environment/data", buffer, true);
 
         if (status)
+        {
             _pendingEnv.pop_back();
+        }
+
+        if (_PHCorrector.isUpWarning())
+        {
+            _sendTankNotificationHandle("PH_UP", sendingEnvData.tankPhUp);
+        }
+
+        if (_PHCorrector.isDownWarning())
+        {
+            _sendTankNotificationHandle("PH_DOWN", sendingEnvData.tankPhDown);
+        }
+
+        if (_TDSCorrector.isAWarning())
+        {
+            _sendTankNotificationHandle("NUTRITION_A", sendingEnvData.tankA);
+        }
+
+        if (_TDSCorrector.isBWarning())
+        {
+            _sendTankNotificationHandle("NUTRITION_B", sendingEnvData.tankB);
+        }
 
         _mcp.digitalWrite(PC_LED_READ_ENV_PIN, LOW);
         _statusState = IDLE;
+        break;
+    }
+
+    case PUMP_START:
+    {
+        _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, HIGH);
+
+        PumpData pendingPumpData = _pendingPump.back();
+
+        switch (pendingPumpData.type)
+        {
+        case NUTRITION:
+            _TDSCorrector.activePump(pendingPumpData.duration);
+            break;
+        case PH_UP:
+            _PHCorrector.activePhUpPump(pendingPumpData.duration);
+            break;
+        case PH_DOWN:
+            _PHCorrector.activePhDownPump(pendingPumpData.duration);
+            break;
+        }
+
+        _statusState = PUMP_ADDING;
         break;
     }
 
@@ -310,30 +394,36 @@ void DeviceIoT::_mainProccessHandle()
         if (!pumpStatus)
         {
             _mainTank.activeMixer();
-            _statusState = IDLE;
+            _statusState = PUMP_SENDING;
         }
         break;
     }
 
     case PUMP_SENDING:
     {
-        PumpData sendingPumpData = _pendingPump.back();
+        if (!_mainTank.isActiveMixer())
+        {
+            PumpData sendingPumpData = _pendingPump.back();
 
-        StaticJsonDocument<200> sendingPumpJson;
-        sendingPumpJson["duration"] = sendingPumpData.duration;
-        sendingPumpJson["pump"] = sendingPumpData.type;
-        sendingPumpJson["datetime"] = sendingPumpData.datetime;
+            StaticJsonDocument<256> sendingPumpJson;
+            sendingPumpJson["duration"] = sendingPumpData.duration;
+            sendingPumpJson["pump"] = sendingPumpData.type;
+            sendingPumpJson["datetime"] = sendingPumpData.datetime;
 
-        char buffer[200];
-        serializeJson(sendingPumpJson, buffer);
-        bool status = _MQTTManagement.publish("pump/locally", buffer);
+            char buffer[256];
+            serializeJson(sendingPumpJson, buffer);
+            bool status = _MQTTManagement.publish("pump/locally", buffer);
 
-        if (status)
-            _pendingPump.pop_back();
+            if (status)
+            {
+                _pendingPump.pop_back();
+            }
 
-        _statusState = IDLE;
-        _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, LOW);
-        _startReadEnvironment();
+            _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, LOW);
+
+            _statusState = IDLE;
+            _startReadEnvironment();
+        }
         break;
     }
     }
@@ -343,9 +433,7 @@ void DeviceIoT::_startReadEnvironment()
 {
     if (_statusState == IDLE)
     {
-        _mcp.digitalWrite(PC_LED_READ_ENV_PIN, HIGH);
-        _statusState = ENV_MIXING;
-        _mainTank.activeMixer();
+        _statusState = ENV_START;
     }
 }
 
@@ -353,29 +441,61 @@ void DeviceIoT::_startActivatePump(PumpType type, float duration)
 {
     if (_statusState == IDLE)
     {
-        _mcp.digitalWrite(PC_LED_ADD_EVENT_PIN, HIGH);
-        _statusState = PUMP_ADDING;
-
-        switch (type)
-        {
-        case NUTRITION:
-            _TDSCorrector.activePump(duration);
-            break;
-        case PH_UP:
-            _PHCorrector.activePhUpPump(duration);
-            break;
-        case PH_DOWN:
-            _PHCorrector.activePhDownPump(duration);
-            break;
-        }
-
         PumpData data;
         data.duration = duration;
         data.type = type;
         data.datetime = _networkManagement.getCurrentTime();
 
         _pendingPump.push_back(data);
+
+        _statusState = PUMP_START;
     }
 }
 
-void DeviceIoT::_resendPumpEnvHandle() {}
+void DeviceIoT::_sendTankNotificationHandle(String type, float volume)
+{
+    StaticJsonDocument<256> json;
+    json["type"] = type;
+    json["volume"] = volume;
+
+    char buffer[256];
+    serializeJson(json, buffer);
+    _MQTTManagement.publish("tank/notification", buffer);
+}
+
+void DeviceIoT::_resendPumpEnvHandle()
+{
+    if (_pendingEnv.empty() && _pendingPump.empty())
+        return;
+
+    DynamicJsonDocument doc(4096);
+
+    JsonArray envArray = doc.createNestedArray("environment");
+    for (const EnvData &env : _pendingEnv)
+    {
+        JsonObject obj = envArray.createNestedObject();
+        obj["ph"] = env.ph;
+        obj["tds"] = env.tds;
+        obj["temp"] = env.temp;
+        obj["datetime"] = env.datetime;
+    }
+
+    JsonArray pumpArray = doc.createNestedArray("pump");
+    for (const PumpData &pump : _pendingPump)
+    {
+        JsonObject obj = pumpArray.createNestedObject();
+        obj["type"] = pump.type;
+        obj["duration"] = pump.duration;
+        obj["datetime"] = pump.datetime;
+    }
+
+    String buffer;
+    serializeJson(doc, buffer);
+    bool status = _MQTTManagement.publish("history/pending", buffer.c_str());
+
+    if (status)
+    {
+        _pendingEnv.clear();
+        _pendingPump.clear();
+    }
+}

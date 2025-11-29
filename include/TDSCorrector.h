@@ -8,7 +8,8 @@ private:
     unsigned long _lastTimePump = 0;
     float _pumpDuration = 0;
     bool _isActivePump = false;
-    bool _warningStatus = false;
+    bool _warningAStatus = false;
+    bool _warningBStatus = false;
     float _ATankVolume = 1.0;
     float _BTankVolume = 1.0;
     float _ATankMaxLevel = 40.0;
@@ -31,6 +32,7 @@ public:
     float getBLevelCm();
     float getACurrentVolume();
     float getBCurrentVolume();
-    bool isWarning();
+    bool isAWarning();
+    bool isBWarning();
     bool isActivePump();
 };

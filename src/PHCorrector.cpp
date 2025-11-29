@@ -32,15 +32,27 @@ void PHCorrector::loop()
         }
     }
 
-    if (now - lastLevelCheck >= 5000)
+    if (now - lastLevelCheck >= 500)
     {
         lastLevelCheck = now;
-        float phUpLevel = getPhUpLevelCm();
-        float phDownLevel = getPhDownLevelCm();
-        if (phUpLevel > _phUpTankMinLevel && phDownLevel > _phDownTankMinLevel)
-            _warningStatus = false;
-        else
-            _warningStatus = true;
+
+        if (_warningUpStatus)
+        {
+            float phUpLevel = getPhUpLevelCm();
+            if (phUpLevel > _phUpTankMinLevel)
+            {
+                _warningUpStatus = false;
+            }
+        }
+
+        if (_warningDownStatus)
+        {
+            float phDownLevel = getPhDownLevelCm();
+            if (phDownLevel > _phDownTankMinLevel)
+            {
+                _warningDownStatus = false;
+            }
+        }
     }
 }
 
@@ -85,6 +97,12 @@ float PHCorrector::getPhDownLevelCm()
 float PHCorrector::getPhUpCurrentVolume()
 {
     float currenLevel = getPhUpLevelCm();
+
+    if (currenLevel < _phUpTankMinLevel)
+    {
+        _warningUpStatus = true;
+    }
+
     float currentVolume = _phUpTankVolume * (currenLevel / _phUpTankMaxLevel);
 
     return currentVolume;
@@ -93,14 +111,25 @@ float PHCorrector::getPhUpCurrentVolume()
 float PHCorrector::getPhDownCurrentVolume()
 {
     float currenLevel = getPhDownLevelCm();
+
+    if (currenLevel < _phDownTankMinLevel)
+    {
+        _warningDownStatus = true;
+    }
+
     float currentVolume = _phDownTankVolume * (currenLevel / _phDownTankMaxLevel);
 
     return currentVolume;
 }
 
-bool PHCorrector::isWarning()
+bool PHCorrector::isUpWarning()
 {
-    return _warningStatus;
+    return _warningUpStatus;
+}
+
+bool PHCorrector::isDownWarning()
+{
+    return _warningDownStatus;
 }
 
 bool PHCorrector::isActivePump()
