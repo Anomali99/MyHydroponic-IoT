@@ -31,8 +31,7 @@ void PHCorrector::loop()
             _isActivePump = false;
         }
     }
-
-    if (now - lastLevelCheck >= 500)
+    else if (now - lastLevelCheck >= 500)
     {
         lastLevelCheck = now;
 

@@ -35,6 +35,7 @@ public:
     MQTTManagement(NetworkManagement &connection);
     void setup();
     void loop();
+    bool isConnected();
     bool publish(const char *topic, const char *payload, bool retain = false);
     bool subscribe(const char *topic);
     void reconnect();

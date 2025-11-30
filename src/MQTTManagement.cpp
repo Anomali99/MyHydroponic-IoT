@@ -134,6 +134,11 @@ bool MQTTManagement::subscribe(const char *topic)
     }
 }
 
+bool MQTTManagement::isConnected()
+{
+    return _connection.isConnected() && _mqttClient.connected();
+}
+
 void MQTTManagement::_onMqttConnect(bool sessionPresent)
 {
     publish(_willTopic, "1", true);

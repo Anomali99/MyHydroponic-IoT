@@ -25,7 +25,7 @@
 
 // pH Corrector Config
 #define PH_UP_US_TRIG_PIN 15   // GPIO
-#define PH_UP_US_ECHO_PIN 2    // GPIO
+#define PH_UP_US_ECHO_PIN 18   // GPIO
 #define PH_DOWN_US_TRIG_PIN 16 // GPIO
 #define PH_DOWN_US_ECHO_PIN 17 // GPIO
 #define PH_UP_PUMP_PIN 2       // MCP
@@ -34,13 +34,13 @@
 // TDS Corrector Config
 #define TDS_A_US_TRIG_PIN 27 // GPIO
 #define TDS_A_US_ECHO_PIN 14 // GPIO
-#define TDS_B_US_TRIG_PIN 12 // GPIO
+#define TDS_B_US_TRIG_PIN 19 // GPIO
 #define TDS_B_US_ECHO_PIN 13 // GPIO
 #define TDS_TDS_PUMP_PIN 1   // MCP
 
 // Physical Control Config
 #define PC_BUZZER_PIN 0             // MCP
-#define PC_LED_HEARTBEAT_PIN 8      // MCP
+#define PC_LED_HEARTBEAT_PIN 15     // MCP
 #define PC_LED_WARNING_PIN 9        // MCP
 #define PC_LED_WIFI_PIN 10          // MCP
 #define PC_LED_MQTT_PIN 11          // MCP

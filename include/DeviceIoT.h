@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include <functional>
 #include <vector>
+#include <queue>
 #include <string>
 #include "LCDDisplay.h"
 #include "NetworkManagement.h"
@@ -23,10 +24,18 @@ enum PumpType
     PH_DOWN
 };
 
+enum SourceType
+{
+    AUTOMATION,
+    MANUALLY,
+    LOCALLY
+};
+
 struct PumpData
 {
     float duration;
     PumpType type;
+    SourceType source;
     String datetime;
 };
 
@@ -66,6 +75,7 @@ private:
     InterruptButton _btnPhDown;
     std::vector<EnvData> _pendingEnv;
     std::vector<PumpData> _pendingPump;
+    std::queue<PumpData> _queuePump;
     bool _isIdle();
     void _buttonsHandle();
     void _heartbeatHandle();
@@ -73,13 +83,14 @@ private:
     void _mainProccessHandle();
     void _WifiStatusHandle(bool status);
     void _MQTTStatusHandle(bool status);
-    void _MQTTMessageHandle(String topic, String payload);
+    void _MQTTMessageHandle(String &topic, String payload);
     void _refreshEnvHandle(String payload);
     void _activatePumpHandle(String payload);
     void _startReadEnvironment();
-    void _startActivatePump(PumpType type, float duration);
+    void _startActivatePump(PumpType type, float duration, SourceType source);
     void _sendTankNotificationHandle(String type, float volume);
     void _resendPumpEnvHandle();
+    String _pumpTypeToString(PumpType type);
 
 public:
     DeviceIoT();
