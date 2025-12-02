@@ -3,8 +3,8 @@
 #include <AsyncMqttClient.h>
 #include <WiFi.h>
 #include <functional>
-#include <vector>
 #include <string>
+#include <vector>
 #include "NetworkManagement.h"
 #include "Config.h"
 

@@ -1,6 +1,4 @@
 #pragma once
-#include <Adafruit_ADS1X15.h>
-#include <vector>
 
 #define WIFI_SSID "Kembar Dua"
 #define WIFI_PASS "sasa1234"
@@ -17,11 +15,11 @@
 #define MT_MIXER_PIN 5    // MCP
 
 // Measuring Tank Config
-#define MeT_PH_PIN ADS1X15_REG_CONFIG_MUX_SINGLE_0  // ADS
-#define MeT_TDS_PIN ADS1X15_REG_CONFIG_MUX_SINGLE_1 // ADS
-#define MeT_TEMP_PIN 4                              // GPIO
-#define MeT_VALVE_PIN 7                             // MCP
-#define MeT_PUMP_PIN 6                              // MCP
+#define MeT_PH_PIN 0    // ADS
+#define MeT_TDS_PIN 1   // ADS
+#define MeT_TEMP_PIN 4  // GPIO
+#define MeT_VALVE_PIN 7 // MCP
+#define MeT_PUMP_PIN 6  // MCP
 
 // pH Corrector Config
 #define PH_UP_US_TRIG_PIN 15   // GPIO

@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
-#include <OneWire.h>
 #include <DallasTemperature.h>
+#include <OneWire.h>
 
 class TemperatureSensor
 {

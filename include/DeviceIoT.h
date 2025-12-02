@@ -1,13 +1,13 @@
 #pragma once
 #include <Arduino.h>
-#include <Wire.h>
-#include <Adafruit_MCP23X17.h>
-#include <Adafruit_ADS1X15.h>
 #include <ArduinoJson.h>
+#include <Adafruit_ADS1X15.h>
+#include <Adafruit_MCP23X17.h>
+#include <Wire.h>
 #include <functional>
-#include <vector>
 #include <queue>
 #include <string>
+#include <vector>
 #include "LCDDisplay.h"
 #include "NetworkManagement.h"
 #include "MQTTManagement.h"

@@ -1,8 +1,9 @@
 #pragma once
+#include <Adafruit_MCP23X17.h>
+#include <vector>
 #include "PHSensor.h"
 #include "TDSSensor.h"
 #include "TemperatureSensor.h"
-#include <Adafruit_MCP23X17.h>
 
 struct EnvironmentData
 {
@@ -22,6 +23,7 @@ enum MeasuringState
 class MeasuringTank
 {
 private:
+    int _sampleCount = 30;
     MeasuringState _statusState = MEASURING_IDLE;
     unsigned long _lastTimeActivate = 0;
     Adafruit_ADS1115 &_ads;
@@ -29,6 +31,7 @@ private:
     PHSensor _phSensor;
     TDSSensor _tdsSensor;
     TemperatureSensor _tempSensor;
+    std::vector<EnvironmentData> _sampleData;
     EnvironmentData _envData;
     byte _valvePin;
     byte _pumpPin;

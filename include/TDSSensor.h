@@ -1,14 +1,11 @@
 #pragma once
-
-#include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
-
-#define VREF 5.0
-#define K_VALUE 1.0
+#include <Arduino.h>
 
 class TDSSensor
 {
 private:
+    float _kValue = 0.38;
     Adafruit_ADS1115 &_ads;
     byte _pin;
 

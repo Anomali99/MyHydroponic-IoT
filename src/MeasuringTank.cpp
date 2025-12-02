@@ -38,13 +38,39 @@ void MeasuringTank::loop()
         break;
 
     case READ_ENV:
-        _envData.temp = _tempSensor.readTempC();
-        _envData.ph = _phSensor.readPh();
-        _envData.tds = _tdsSensor.readTDS(_envData.temp);
+        if (_sampleData.size() < _sampleCount)
+        {
+            EnvironmentData data;
+            data.temp = _tempSensor.readTempC();
+            data.ph = _phSensor.readPh();
+            data.tds = _tdsSensor.readTDS(_envData.temp);
 
-        _mcp.digitalWrite(_valvePin, LOW);
-        _lastTimeActivate = now;
-        _statusState = CLEAN_TANK;
+            _sampleData.push_back(data);
+        }
+        else
+        {
+            float phCount = 0;
+            float tdsCount = 0;
+            float tempCount = 0;
+            float dataCount = _sampleData.size();
+
+            for (const EnvironmentData data : _sampleData)
+            {
+                phCount += data.ph;
+                tdsCount += data.tds;
+                tempCount += data.temp;
+            }
+
+            _envData.ph = phCount / dataCount;
+            _envData.tds = tdsCount / dataCount;
+            _envData.temp = tempCount / dataCount;
+
+            _sampleData.clear();
+
+            _mcp.digitalWrite(_valvePin, LOW);
+            _lastTimeActivate = now;
+            _statusState = CLEAN_TANK;
+        }
         break;
 
     case CLEAN_TANK:
