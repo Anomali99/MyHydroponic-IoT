@@ -23,7 +23,7 @@ enum MeasuringState
 class MeasuringTank
 {
 private:
-    int _sampleCount = 30;
+    int _sampleCount = 10;
     MeasuringState _statusState = MEASURING_IDLE;
     unsigned long _lastTimeActivate = 0;
     Adafruit_ADS1115 &_ads;

@@ -40,12 +40,16 @@ void MeasuringTank::loop()
     case READ_ENV:
         if (_sampleData.size() < _sampleCount)
         {
-            EnvironmentData data;
-            data.temp = _tempSensor.readTempC();
-            data.ph = _phSensor.readPh();
-            data.tds = _tdsSensor.readTDS(_envData.temp);
+            if (now - _lastTimeActivate >= 30)
+            {
+                EnvironmentData data;
+                data.temp = _tempSensor.readTempC();
+                data.ph = _phSensor.readPh();
+                data.tds = _tdsSensor.readTDS(_envData.temp);
 
-            _sampleData.push_back(data);
+                _sampleData.push_back(data);
+                _lastTimeActivate = now;
+            }
         }
         else
         {

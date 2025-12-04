@@ -5,8 +5,8 @@
 class PHSensor
 {
 private:
-    float _phSlope = 0.43;
-    float _phOffset = 3.22;
+    float _phSlope = -2.045;
+    float _phIntercept = 12.736;
     Adafruit_ADS1115 &_ads;
     byte _pin;
 

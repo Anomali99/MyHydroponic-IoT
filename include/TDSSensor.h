@@ -5,7 +5,9 @@
 class TDSSensor
 {
 private:
-    float _kValue = 0.38;
+    int kValueAddress = 8;
+    float kValue = 0.65;
+    float tdsFactor = 0.64;
     Adafruit_ADS1115 &_ads;
     byte _pin;
 
