@@ -5,12 +5,17 @@
 class PHSensor
 {
 private:
-    float _phSlope = -2.045;
-    float _phIntercept = 12.736;
+    const float _ph4Voltage = 4.35;
+    const float _ph7Voltage = 3.03;
+    const float _ph4Ref = 4.01;
+    const float _ph7Ref = 6.86;
+    float _phSlope;
+    float _phIntercept;
     Adafruit_ADS1115 &_ads;
     byte _pin;
 
 public:
     PHSensor(Adafruit_ADS1115 &ads, byte pin);
+    float readVoltage();
     float readPh();
 };

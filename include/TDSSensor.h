@@ -13,5 +13,6 @@ private:
 
 public:
     TDSSensor(Adafruit_ADS1115 &ads, byte pin);
+    float readVoltage();
     float readTDS(float temp = 25.0);
 };
