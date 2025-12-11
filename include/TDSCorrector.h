@@ -5,19 +5,19 @@
 class TDSCorrector
 {
 private:
+    float _ATankVolume = 377.14; // ml
+    float _BTankVolume = 377.14; // ml
+    float _ATankHeight = 52.0;   // cm
+    float _BTankHeight = 52.0;   // cm
+    float _ATankMaxLevel = 30.0; // cm
+    float _BTankMaxLevel = 30.0; // cm
+    float _ATankMinLevel = 6.0;  // cm
+    float _BTankMinLevel = 6.0;  // cm
     unsigned long _lastTimePump = 0;
     float _pumpDuration = 0;
     bool _isActivePump = false;
     bool _warningAStatus = false;
     bool _warningBStatus = false;
-    float _ATankVolume = 1.0;
-    float _BTankVolume = 1.0;
-    float _ATankMaxLevel = 40.0;
-    float _BTankMaxLevel = 40.0;
-    float _ATankMinLevel = 10.0;
-    float _BTankMinLevel = 10.0;
-    float _ATankHeight = 60.0;
-    float _BTankHeight = 60.0;
     Adafruit_MCP23X17 &_mcp;
     UltrasonicSensor _levelASensor;
     UltrasonicSensor _levelBSensor;

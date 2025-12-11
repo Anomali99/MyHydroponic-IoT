@@ -57,7 +57,7 @@ private:
     StatusState _statusState = IDLE;
     unsigned long _lastWarning = 0;
     bool _warningState = false;
-    float _durationActivatePump = 10;
+    float _durationActivatePump = 0.5;
     long _debounce = 1000;
     Adafruit_MCP23X17 _mcp;
     Adafruit_ADS1115 _ads;

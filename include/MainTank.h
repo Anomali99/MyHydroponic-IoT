@@ -5,6 +5,10 @@
 class MainTank
 {
 private:
+    float _tankVolume = 22400.0; // ml
+    float _tankHeight = 46.0;    // cm
+    float _minLevel = 5.0;       // cm
+    float _maxLevel = 20.0;      // cm
     const unsigned long NO_CHANGE_TIMEOUT = 10000;
     const float LEVEL_INCREASE_THRESHOLD = 0.5;
     unsigned long _lastTimeMixer = 0;
@@ -14,10 +18,6 @@ private:
     bool _isAddingWater = false;
     bool _isActiveMixer = false;
     bool _warningStatus = false;
-    float _tankVolume = 2.0;
-    float _tankHeight = 60.0;
-    float _minLevel = 10.0;
-    float _maxLevel = 40.0;
     Adafruit_MCP23X17 &_mcp;
     UltrasonicSensor _levelSensor;
     byte _pinValve;

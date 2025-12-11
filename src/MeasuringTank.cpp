@@ -30,7 +30,7 @@ void MeasuringTank::loop()
         break;
 
     case FILL_TANK:
-        if (now - _lastTimeActivate >= 5000)
+        if (now - _lastTimeActivate >= 11350)
         {
             _mcp.digitalWrite(_pumpPin, HIGH);
             _statusState = READ_ENV;
