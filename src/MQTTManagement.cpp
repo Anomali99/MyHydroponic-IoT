@@ -33,11 +33,6 @@ void MQTTManagement::setup()
     {
         statusCallback(false);
     }
-
-    Serial.println("--- MQTT Setup ---");
-    Serial.printf("Broker Host: %s, Port: %d\n", MQTT_HOST, _port);
-    Serial.printf("Client ID: %s\n", _clientId.c_str());
-    Serial.println("------------------");
 }
 
 void MQTTManagement::loop()

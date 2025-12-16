@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
+#include "UltrasonicSensor.h"
 
 struct EnvData
 {
@@ -20,7 +21,7 @@ class LCDDisplay
 {
 private:
     LiquidCrystal_I2C _lcd;
-    int _scrollPosition = 0;
+    int _scrollPosition = -1;
     String _dataMessage;
     String _datetime;
     String _getShortTime(const String &datetime);
@@ -32,5 +33,6 @@ public:
     void loop();
     void clear();
     void showData(const EnvData &data);
+    void showSetupData(const SetupData &setupData);
     void showMessage(const String &line1, const String &line2 = "");
 };

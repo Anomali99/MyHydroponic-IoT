@@ -32,6 +32,8 @@ public:
     float getBLevelCm();
     float getACurrentVolume();
     float getBCurrentVolume();
+    SetupData getASetupData();
+    SetupData getBSetupData();
     bool isAWarning();
     bool isBWarning();
     bool isActivePump();

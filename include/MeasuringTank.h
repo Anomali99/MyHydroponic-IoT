@@ -24,6 +24,8 @@ class MeasuringTank
 {
 private:
     int _sampleCount = 10;
+    long _pumpDuration = 11.35 * 1000;
+    long _valveDuration = 120 * 1000;
     MeasuringState _statusState = MEASURING_IDLE;
     unsigned long _lastTimeActivate = 0;
     Adafruit_ADS1115 &_ads;

@@ -30,7 +30,7 @@ void MeasuringTank::loop()
         break;
 
     case FILL_TANK:
-        if (now - _lastTimeActivate >= 11350)
+        if (now - _lastTimeActivate >= _pumpDuration)
         {
             _mcp.digitalWrite(_pumpPin, HIGH);
             _statusState = READ_ENV;
@@ -78,7 +78,7 @@ void MeasuringTank::loop()
         break;
 
     case CLEAN_TANK:
-        if (now - _lastTimeActivate >= 5000)
+        if (now - _lastTimeActivate >= _valveDuration)
         {
             _mcp.digitalWrite(_valvePin, HIGH);
             _statusState = MEASURING_IDLE;

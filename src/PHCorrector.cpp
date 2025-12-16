@@ -88,7 +88,7 @@ float PHCorrector::getPhUpLevelCm()
 float PHCorrector::getPhDownLevelCm()
 {
     float distance = _levelPhDownSensor.getDistanceCm();
-    float level = _pinPumpPhDown - distance;
+    float level = _phDownTankHeight - distance;
 
     return level;
 }
@@ -119,6 +119,30 @@ float PHCorrector::getPhDownCurrentVolume()
     float currentVolume = _phDownTankVolume * (currenLevel / _phDownTankMaxLevel);
 
     return currentVolume;
+}
+
+SetupData PHCorrector::getPhUpSetupData()
+{
+    SetupData data;
+    data.name = "PhUp";
+
+    data.distance = _levelPhUpSensor.getSetupDistanceCm();
+    data.level = _phUpTankHeight - data.distance;
+    data.volume = _phUpTankVolume * (data.level / _phUpTankMaxLevel);
+
+    return data;
+}
+
+SetupData PHCorrector::getPhDownSetupData()
+{
+    SetupData data;
+    data.name = "PhDn";
+
+    data.distance = _levelPhDownSensor.getSetupDistanceCm();
+    data.level = _phDownTankHeight - data.distance;
+    data.volume = _phDownTankVolume * (data.level / _phDownTankMaxLevel);
+
+    return data;
 }
 
 bool PHCorrector::isUpWarning()

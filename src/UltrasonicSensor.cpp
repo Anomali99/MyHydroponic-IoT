@@ -13,6 +13,31 @@ void UltrasonicSensor::setup()
 
 float UltrasonicSensor::getDistanceCm()
 {
+    for (int i = 0; i < _maxRetries; i++)
+    {
+        digitalWrite(_pinTrig, LOW);
+        delayMicroseconds(5);
+
+        digitalWrite(_pinTrig, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(_pinTrig, LOW);
+
+        long duration = pulseIn(_pinEcho, HIGH);
+        float distance = duration * 0.0344 / 2;
+
+        if (distance > 22.0)
+        {
+            return distance;
+        }
+
+        delay(15);
+    }
+
+    return -1.0;
+}
+
+float UltrasonicSensor::getSetupDistanceCm()
+{
     digitalWrite(_pinTrig, LOW);
     delayMicroseconds(5);
 
@@ -21,7 +46,5 @@ float UltrasonicSensor::getDistanceCm()
     digitalWrite(_pinTrig, LOW);
 
     long duration = pulseIn(_pinEcho, HIGH);
-    float distance = duration * 0.0344 / 2;
-
-    return distance;
+    return duration * 0.0344 / 2;
 }

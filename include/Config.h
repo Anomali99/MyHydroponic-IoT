@@ -31,7 +31,7 @@
 
 // TDS Corrector Config
 #define TDS_A_US_TRIG_PIN 27 // GPIO
-#define TDS_A_US_ECHO_PIN 14 // GPIO
+#define TDS_A_US_ECHO_PIN 23 // GPIO
 #define TDS_B_US_TRIG_PIN 19 // GPIO
 #define TDS_B_US_ECHO_PIN 13 // GPIO
 #define TDS_TDS_PUMP_PIN 1   // MCP

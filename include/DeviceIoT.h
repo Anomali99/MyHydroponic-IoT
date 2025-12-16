@@ -41,6 +41,7 @@ struct PumpData
 
 enum StatusState
 {
+    SETUP,
     IDLE,
     ENV_START,
     ENV_MIXING,
@@ -54,11 +55,14 @@ enum StatusState
 class DeviceIoT
 {
 private:
-    StatusState _statusState = IDLE;
-    unsigned long _lastWarning = 0;
-    bool _warningState = false;
+    StatusState _statusState = SETUP;
+    float _setupDurationTimeout = 60 * 1000;
     float _durationActivatePump = 0.5;
     long _debounce = 1000;
+    unsigned long _lastWarning = 0;
+    unsigned long _lastSetupTime = 0;
+    bool _warningState = false;
+    int _tankIndex = 0;
     Adafruit_MCP23X17 _mcp;
     Adafruit_ADS1115 _ads;
     LCDDisplay _display;

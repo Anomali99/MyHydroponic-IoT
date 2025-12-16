@@ -34,6 +34,8 @@ public:
     float getPhDownLevelCm();
     float getPhUpCurrentVolume();
     float getPhDownCurrentVolume();
+    SetupData getPhUpSetupData();
+    SetupData getPhDownSetupData();
     bool isUpWarning();
     bool isDownWarning();
     bool isActivePump();

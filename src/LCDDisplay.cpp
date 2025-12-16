@@ -10,6 +10,7 @@ void LCDDisplay::setup()
     _lcd.init();
     _lcd.backlight();
     _lcd.clear();
+    _scrollPosition = -1;
 }
 
 void LCDDisplay::loop()
@@ -17,7 +18,7 @@ void LCDDisplay::loop()
     static unsigned long lastTime = 0;
     unsigned long now = millis();
 
-    if (now - lastTime > 1000)
+    if (now - lastTime > 1000 && _scrollPosition != -1)
     {
         lastTime = now;
         _runText();
@@ -32,9 +33,25 @@ void LCDDisplay::clear()
 void LCDDisplay::showData(const EnvData &data)
 {
     _datetime = "Time:" + _getShortTime(data.datetime);
-    _dataMessage = "PH: " + String(data.ph, 2) + " TDS: " + String(data.tds, 0) + " Temp: " + String(data.temp, 2) + " MT: " + String(data.tankMain, 2) + " Up: " + String(data.tankPhUp, 2) + " Down: " + String(data.tankPhDown, 2) + " A: " + String(data.tankA, 2) + " B: " + String(data.tankB, 2) + " --- ";
+    _dataMessage = "PH: " + String(data.ph, 1) + ", TDS: " + String(data.tds, 0) + " ppm, Temp: " + String(data.temp, 2) + " C, MT: " + String(data.tankMain, 0) + " ml, Up: " + String(data.tankPhUp, 1) + " ml, Down: " + String(data.tankPhDown, 1) + " ml, A: " + String(data.tankA, 1) + " ml, B: " + String(data.tankB, 1) + " ml";
 
     _scrollPosition = 0;
+    _lcd.clear();
+}
+
+void LCDDisplay::showSetupData(const SetupData &setupData)
+{
+    _lcd.setCursor(0, 0);
+    _lcd.print(setupData.name);
+
+    _lcd.setCursor(6, 0);
+    _lcd.print("V:" + String(setupData.volume, 1));
+
+    _lcd.setCursor(0, 1);
+    _lcd.print("D:" + String(setupData.distance, 1));
+
+    _lcd.setCursor(9, 1);
+    _lcd.print("L:" + String(setupData.level, 1));
 }
 
 void LCDDisplay::showMessage(const String &line1, const String &line2)

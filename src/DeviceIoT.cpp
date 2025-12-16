@@ -67,8 +67,6 @@ void DeviceIoT::setup()
     _btnNutrition.setup();
     _btnPhUp.setup();
     _btnPhDown.setup();
-
-    _startReadEnvironment();
 }
 
 void DeviceIoT::loop()
@@ -165,14 +163,33 @@ void DeviceIoT::_buttonsHandle()
         {
             _btnReconnect.setBtnPressed(false);
             _btnReconnect.setLastPress(now);
-            _networkManagement.reconnect();
+
+            if (_statusState == SETUP)
+            {
+                _statusState = IDLE;
+                _startReadEnvironment();
+            }
+            else
+            {
+                _networkManagement.reconnect();
+            }
         }
 
         if (_btnReadEnv.isBtnPressed() && (now - _btnReadEnv.getLastPress() > _debounce))
         {
             _btnReadEnv.setBtnPressed(false);
             _btnReadEnv.setLastPress(now);
-            if (_isIdle())
+
+            if (_statusState == SETUP)
+            {
+                _tankIndex++;
+                _lastSetupTime = now;
+                if (_tankIndex >= 5)
+                {
+                    _tankIndex = 0;
+                }
+            }
+            else if (_isIdle())
             {
                 _startReadEnvironment();
             }
@@ -182,7 +199,17 @@ void DeviceIoT::_buttonsHandle()
         {
             _btnNutrition.setBtnPressed(false);
             _btnNutrition.setLastPress(now);
-            if (_isIdle())
+
+            if (_statusState == SETUP)
+            {
+                _tankIndex--;
+                _lastSetupTime = now;
+                if (_tankIndex < 0)
+                {
+                    _tankIndex = 4;
+                }
+            }
+            else if (_isIdle())
             {
                 _startActivatePump(NUTRITION, _durationActivatePump, LOCALLY);
             };
@@ -192,9 +219,13 @@ void DeviceIoT::_buttonsHandle()
         {
             _btnPhUp.setBtnPressed(false);
             _btnPhUp.setLastPress(now);
-            if (_isIdle())
+
+            if (_statusState != SETUP)
             {
-                _startActivatePump(PH_UP, _durationActivatePump, LOCALLY);
+                if (_isIdle())
+                {
+                    _startActivatePump(PH_UP, _durationActivatePump, LOCALLY);
+                }
             }
         }
 
@@ -202,9 +233,13 @@ void DeviceIoT::_buttonsHandle()
         {
             _btnPhDown.setBtnPressed(false);
             _btnPhDown.setLastPress(now);
-            if (_isIdle())
+
+            if (_statusState != SETUP)
             {
-                _startActivatePump(PH_DOWN, _durationActivatePump, LOCALLY);
+                if (_isIdle())
+                {
+                    _startActivatePump(PH_DOWN, _durationActivatePump, LOCALLY);
+                }
             }
         }
     }
@@ -265,12 +300,50 @@ void DeviceIoT::_MQTTMessageHandle(String &topic, String payload)
 
 void DeviceIoT::_mainProccessHandle()
 {
+    long now = millis();
     switch (_statusState)
     {
+    case SETUP:
+    {
+        static unsigned long lastSetup = 0;
+        if (now - lastSetup > 100)
+        {
+            SetupData setupData;
+            if (_tankIndex == 4)
+            {
+                setupData = _TDSCorrector.getBSetupData();
+            }
+            else if (_tankIndex == 3)
+            {
+                setupData = _TDSCorrector.getASetupData();
+            }
+            else if (_tankIndex == 2)
+            {
+                setupData = _PHCorrector.getPhDownSetupData();
+            }
+            else if (_tankIndex == 1)
+            {
+                setupData = _PHCorrector.getPhUpSetupData();
+            }
+            else
+            {
+                setupData = _mainTank.getSetupData();
+            }
+
+            _display.showSetupData(setupData);
+        }
+
+        if (now - _lastSetupTime > _setupDurationTimeout)
+        {
+            _statusState = IDLE;
+            _startReadEnvironment();
+        }
+        break;
+    }
+
     case IDLE:
     {
         static unsigned long lastResend = 0;
-        long now = millis();
         if (!_queuePump.empty())
         {
             _statusState = PUMP_START;
@@ -295,8 +368,8 @@ void DeviceIoT::_mainProccessHandle()
     {
         if (!_mainTank.isActiveMixer())
         {
-            _statusState = ENV_READING;
             _measuringTank.startReadData();
+            _statusState = ENV_READING;
         }
         break;
     }
@@ -305,7 +378,7 @@ void DeviceIoT::_mainProccessHandle()
     {
         MeasuringState measuringState = _measuringTank.getState();
 
-        if (measuringState == MEASURING_IDLE)
+        if (measuringState == MEASURING_IDLE || measuringState == CLEAN_TANK)
         {
             EnvironmentData env = _measuringTank.getData();
 

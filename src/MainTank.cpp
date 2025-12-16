@@ -92,6 +92,18 @@ float MainTank::getCurrentVolume()
     return currentVolume;
 }
 
+SetupData MainTank::getSetupData()
+{
+    SetupData data;
+    data.name = "Main";
+
+    data.distance = _levelSensor.getSetupDistanceCm();
+    data.level = _tankHeight - data.distance;
+    data.volume = _tankVolume * (data.level / _maxLevel);
+
+    return data;
+}
+
 bool MainTank::isWarning()
 {
     return _warningStatus;

@@ -108,6 +108,30 @@ float TDSCorrector::getBCurrentVolume()
     return currentVolume;
 }
 
+SetupData TDSCorrector::getASetupData()
+{
+    SetupData data;
+    data.name = "NutA";
+
+    data.distance = _levelASensor.getSetupDistanceCm();
+    data.level = _ATankHeight - data.distance;
+    data.volume = _ATankVolume * (data.level / _ATankMaxLevel);
+
+    return data;
+}
+
+SetupData TDSCorrector::getBSetupData()
+{
+    SetupData data;
+    data.name = "NutB";
+
+    data.distance = _levelBSensor.getSetupDistanceCm();
+    data.level = _BTankHeight - data.distance;
+    data.volume = _BTankVolume * (data.level / _BTankMaxLevel);
+
+    return data;
+}
+
 bool TDSCorrector::isAWarning()
 {
     return _warningAStatus;
