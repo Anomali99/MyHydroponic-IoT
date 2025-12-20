@@ -19,10 +19,17 @@ void MainTank::setup()
 void MainTank::loop()
 {
     static unsigned long lastLevelCheck = 0;
+    static unsigned long lastKeepAlive = 0;
     unsigned long now = millis();
 
     if (_isActiveMixer)
     {
+        if (now - lastKeepAlive > 100)
+        {
+            lastKeepAlive = now;
+            _mcp.digitalWrite(_pinMixer, LOW);
+        }
+
         if (now - _lastTimeMixer >= _mixerDuration)
         {
             _mcp.digitalWrite(_pinMixer, HIGH);
@@ -32,6 +39,12 @@ void MainTank::loop()
 
     if (_isAddingWater)
     {
+        if (now - lastKeepAlive > 100)
+        {
+            lastKeepAlive = now;
+            _mcp.digitalWrite(_pinValve, LOW);
+        }
+
         float currentLevel = getLevelCm();
 
         if (currentLevel > _levelAtLastCheck + LEVEL_INCREASE_THRESHOLD)

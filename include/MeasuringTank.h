@@ -1,6 +1,7 @@
 #pragma once
 #include <Adafruit_MCP23X17.h>
 #include <vector>
+#include <algorithm>
 #include "PHSensor.h"
 #include "TDSSensor.h"
 #include "TemperatureSensor.h"
@@ -16,6 +17,7 @@ enum MeasuringState
 {
     MEASURING_IDLE,
     FILL_TANK,
+    WAIT_STABLE,
     READ_ENV,
     CLEAN_TANK,
 };
@@ -23,10 +25,11 @@ enum MeasuringState
 class MeasuringTank
 {
 private:
-    int _sampleCount = 10;
-    long _pumpDuration = 11.35 * 1000;
-    long _valveDuration = 120 * 1000;
+    int _sampleCount = 30;
     MeasuringState _statusState = MEASURING_IDLE;
+    unsigned long _pumpDuration = 11.35 * 1000;
+    unsigned long _valveDuration = 120 * 1000;
+    unsigned long _stabilizeDuration = 5 * 1000;
     unsigned long _lastTimeActivate = 0;
     Adafruit_ADS1115 &_ads;
     Adafruit_MCP23X17 &_mcp;

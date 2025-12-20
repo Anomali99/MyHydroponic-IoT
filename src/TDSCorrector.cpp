@@ -18,37 +18,21 @@ void TDSCorrector::setup()
 
 void TDSCorrector::loop()
 {
-    static unsigned long lastLevelCheck = 0;
+    static unsigned long lastKeepAlive = 0;
     unsigned long now = millis();
 
     if (_isActivePump)
     {
+        if (now - lastKeepAlive > 100)
+        {
+            lastKeepAlive = now;
+            _mcp.digitalWrite(_pinPump, LOW);
+        }
+
         if (now - _lastTimePump >= _pumpDuration)
         {
             _mcp.digitalWrite(_pinPump, HIGH);
             _isActivePump = false;
-        }
-    }
-    else if (now - lastLevelCheck >= 500)
-    {
-        lastLevelCheck = now;
-
-        if (_warningAStatus)
-        {
-            float ALevel = getALevelCm();
-            if (ALevel > _ATankMinLevel)
-            {
-                _warningAStatus = false;
-            }
-        }
-
-        if (_warningBStatus)
-        {
-            float BLevel = getBLevelCm();
-            if (BLevel > _BTankMinLevel)
-            {
-                _warningBStatus = false;
-            }
         }
     }
 }
@@ -88,6 +72,10 @@ float TDSCorrector::getACurrentVolume()
     {
         _warningAStatus = true;
     }
+    else
+    {
+        _warningAStatus = false;
+    }
 
     float currentVolume = _ATankVolume * (currenLevel / _ATankMaxLevel);
 
@@ -101,6 +89,10 @@ float TDSCorrector::getBCurrentVolume()
     if (currenLevel < _BTankMinLevel)
     {
         _warningBStatus = true;
+    }
+    else
+    {
+        _warningBStatus = false;
     }
 
     float currentVolume = _BTankVolume * (currenLevel / _BTankMaxLevel);

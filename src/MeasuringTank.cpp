@@ -13,6 +13,7 @@ MeasuringTank::MeasuringTank(
 
 void MeasuringTank::setup()
 {
+    _ads.setGain(GAIN_TWOTHIRDS);
     _tempSensor.setup();
     _mcp.pinMode(_valvePin, OUTPUT);
     _mcp.pinMode(_pumpPin, OUTPUT);
@@ -22,7 +23,35 @@ void MeasuringTank::setup()
 
 void MeasuringTank::loop()
 {
+    static unsigned long lastKeepAlive = 0;
     unsigned long now = millis();
+
+    if (now - lastKeepAlive > 100)
+    {
+        lastKeepAlive = now;
+
+        switch (_statusState)
+        {
+        case FILL_TANK:
+        {
+            _mcp.digitalWrite(_pumpPin, LOW);
+            break;
+        }
+
+        case CLEAN_TANK:
+        {
+            _mcp.digitalWrite(_valvePin, LOW);
+            break;
+        }
+
+        default:
+        {
+            _mcp.digitalWrite(_pumpPin, HIGH);
+            _mcp.digitalWrite(_valvePin, HIGH);
+            break;
+        }
+        }
+    }
 
     switch (_statusState)
     {
@@ -33,6 +62,15 @@ void MeasuringTank::loop()
         if (now - _lastTimeActivate >= _pumpDuration)
         {
             _mcp.digitalWrite(_pumpPin, HIGH);
+            _statusState = WAIT_STABLE;
+        }
+        break;
+
+    case WAIT_STABLE:
+        if (now - _lastTimeActivate >= _stabilizeDuration)
+        {
+            _sampleData.clear();
+            _lastTimeActivate = now;
             _statusState = READ_ENV;
         }
         break;
@@ -40,14 +78,15 @@ void MeasuringTank::loop()
     case READ_ENV:
         if (_sampleData.size() < _sampleCount)
         {
-            if (now - _lastTimeActivate >= 30)
+            if (now - _lastTimeActivate >= 100)
             {
                 EnvironmentData data;
                 data.temp = _tempSensor.readTempC();
                 data.ph = _phSensor.readPh();
-                data.tds = _tdsSensor.readTDS(_envData.temp);
+                data.tds = _tdsSensor.readTDS(data.temp);
 
                 _sampleData.push_back(data);
+
                 _lastTimeActivate = now;
             }
         }

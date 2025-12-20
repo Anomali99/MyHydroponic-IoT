@@ -2,7 +2,7 @@
 
 PHSensor::PHSensor(Adafruit_ADS1115 &ads, byte pin) : _ads(ads), _pin(pin)
 {
-    _phSlope = (_ph7Ref - _ph7Ref) / (_ph7Voltage - _ph4Voltage);
+    _phSlope = (_ph7Ref - _ph4Ref) / (_ph7Voltage - _ph4Voltage);
     _phIntercept = _ph7Ref - (_phSlope * _ph7Voltage);
 }
 

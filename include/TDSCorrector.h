@@ -11,10 +11,10 @@ private:
     float _BTankHeight = 52.0;   // cm
     float _ATankMaxLevel = 30.0; // cm
     float _BTankMaxLevel = 30.0; // cm
-    float _ATankMinLevel = 6.0;  // cm
-    float _BTankMinLevel = 6.0;  // cm
+    float _ATankMinLevel = 9.0;  // cm
+    float _BTankMinLevel = 9.0;  // cm
     unsigned long _lastTimePump = 0;
-    float _pumpDuration = 0;
+    unsigned long _pumpDuration = 0;
     bool _isActivePump = false;
     bool _warningAStatus = false;
     bool _warningBStatus = false;

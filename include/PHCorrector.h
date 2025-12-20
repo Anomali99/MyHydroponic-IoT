@@ -11,11 +11,12 @@ private:
     float _phDownTankHeight = 52.0;   // cm
     float _phUpTankMaxLevel = 30.0;   // cm
     float _phDownTankMaxLevel = 30.0; // cm
-    float _phUpTankMinLevel = 6.0;    // cm
-    float _phDownTankMinLevel = 6.0;  // cm
+    float _phUpTankMinLevel = 9.0;    // cm
+    float _phDownTankMinLevel = 9.0;  // cm
     unsigned long _lastTimePump = 0;
-    float _pumpDuration = 0;
-    bool _isActivePump = false;
+    unsigned long _pumpDuration = 0;
+    bool _isActiveUpPump = false;
+    bool _isActiveDownPump = false;
     bool _warningUpStatus = false;
     bool _warningDownStatus = false;
     Adafruit_MCP23X17 &_mcp;

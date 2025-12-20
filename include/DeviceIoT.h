@@ -56,7 +56,7 @@ class DeviceIoT
 {
 private:
     StatusState _statusState = SETUP;
-    float _setupDurationTimeout = 60 * 1000;
+    float _setupDurationTimeout = 120 * 1000;
     float _durationActivatePump = 0.5;
     long _debounce = 1000;
     unsigned long _lastWarning = 0;
@@ -84,6 +84,7 @@ private:
     void _buttonsHandle();
     void _heartbeatHandle();
     void _warningHandle();
+    void _refreshLedState();
     void _mainProccessHandle();
     void _WifiStatusHandle(bool status);
     void _MQTTStatusHandle(bool status);

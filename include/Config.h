@@ -1,5 +1,9 @@
 #pragma once
 
+// #define WIFI_SSID "Anomali99"
+// #define WIFI_PASS "51271234"
+// #define MQTT_HOST IPAddress(10, 28, 62, 10)
+
 #define WIFI_SSID "Kembar Dua"
 #define WIFI_PASS "sasa1234"
 

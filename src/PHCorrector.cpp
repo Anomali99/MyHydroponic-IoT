@@ -19,37 +19,37 @@ void PHCorrector::setup()
 
 void PHCorrector::loop()
 {
-    static unsigned long lastLevelCheck = 0;
+    static unsigned long lastKeepAlive = 0;
     unsigned long now = millis();
 
-    if (_isActivePump)
+    if (_isActiveUpPump || _isActiveDownPump)
     {
-        if (now - _lastTimePump >= _pumpDuration)
-        {
-            _mcp.digitalWrite(_pinPumpPhUp, HIGH);
-            _mcp.digitalWrite(_pinPumpPhDown, HIGH);
-            _isActivePump = false;
-        }
-    }
-    else if (now - lastLevelCheck >= 500)
-    {
-        lastLevelCheck = now;
 
-        if (_warningUpStatus)
+        if (now - lastKeepAlive > 100)
         {
-            float phUpLevel = getPhUpLevelCm();
-            if (phUpLevel > _phUpTankMinLevel)
+            lastKeepAlive = now;
+
+            if (_isActiveUpPump)
             {
-                _warningUpStatus = false;
+                _mcp.digitalWrite(_pinPumpPhUp, LOW);
+            }
+            if (_isActiveDownPump)
+            {
+                _mcp.digitalWrite(_pinPumpPhDown, LOW);
             }
         }
 
-        if (_warningDownStatus)
+        if (now - _lastTimePump >= _pumpDuration)
         {
-            float phDownLevel = getPhDownLevelCm();
-            if (phDownLevel > _phDownTankMinLevel)
+            if (_isActiveUpPump)
             {
-                _warningDownStatus = false;
+                _isActiveUpPump = false;
+                _mcp.digitalWrite(_pinPumpPhUp, HIGH);
+            }
+            if (_isActiveDownPump)
+            {
+                _isActiveDownPump = false;
+                _mcp.digitalWrite(_pinPumpPhDown, HIGH);
             }
         }
     }
@@ -57,9 +57,9 @@ void PHCorrector::loop()
 
 void PHCorrector::activePhUpPump(float duration)
 {
-    if (!_isActivePump)
+    if (!_isActiveUpPump && !_isActiveDownPump)
     {
-        _isActivePump = true;
+        _isActiveUpPump = true;
         _pumpDuration = duration * 1000;
         _lastTimePump = millis();
         _mcp.digitalWrite(_pinPumpPhUp, LOW);
@@ -68,9 +68,9 @@ void PHCorrector::activePhUpPump(float duration)
 
 void PHCorrector::activePhDownPump(float duration)
 {
-    if (!_isActivePump)
+    if (!_isActiveUpPump && !_isActiveDownPump)
     {
-        _isActivePump = true;
+        _isActiveDownPump = true;
         _pumpDuration = duration * 1000;
         _lastTimePump = millis();
         _mcp.digitalWrite(_pinPumpPhDown, LOW);
@@ -101,6 +101,10 @@ float PHCorrector::getPhUpCurrentVolume()
     {
         _warningUpStatus = true;
     }
+    else
+    {
+        _warningUpStatus = false;
+    }
 
     float currentVolume = _phUpTankVolume * (currenLevel / _phUpTankMaxLevel);
 
@@ -114,6 +118,10 @@ float PHCorrector::getPhDownCurrentVolume()
     if (currenLevel < _phDownTankMinLevel)
     {
         _warningDownStatus = true;
+    }
+    else
+    {
+        _warningDownStatus = false;
     }
 
     float currentVolume = _phDownTankVolume * (currenLevel / _phDownTankMaxLevel);
@@ -157,5 +165,5 @@ bool PHCorrector::isDownWarning()
 
 bool PHCorrector::isActivePump()
 {
-    return _isActivePump;
+    return _isActiveUpPump || _isActiveDownPump;
 }

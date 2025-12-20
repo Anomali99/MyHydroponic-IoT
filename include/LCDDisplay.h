@@ -3,6 +3,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 #include "UltrasonicSensor.h"
+#include "MeasuringTank.h"
 
 struct EnvData
 {
