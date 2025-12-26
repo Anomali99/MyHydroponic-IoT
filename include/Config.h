@@ -19,8 +19,8 @@
 #define MT_MIXER_PIN 5    // MCP
 
 // Measuring Tank Config
-#define MeT_PH_PIN 0    // ADS
-#define MeT_TDS_PIN 1   // ADS
+#define MeT_PH_PIN 0    // ADS Pin A0 (Pair A1)
+#define MeT_TDS_PIN 2   // ADS Pin A2 (Pair A3)
 #define MeT_TEMP_PIN 4  // GPIO
 #define MeT_VALVE_PIN 7 // MCP
 #define MeT_PUMP_PIN 6  // MCP

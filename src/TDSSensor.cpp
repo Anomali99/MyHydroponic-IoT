@@ -4,7 +4,7 @@ TDSSensor::TDSSensor(Adafruit_ADS1115 &ads, byte pin) : _ads(ads), _pin(pin) {}
 
 float TDSSensor::readVoltage()
 {
-    int16_t adcValue = _ads.readADC_SingleEnded(_pin);
+    int16_t adcValue = _ads.readADC_Differential_2_3();
     float voltage = _ads.computeVolts(adcValue);
 
     return voltage;

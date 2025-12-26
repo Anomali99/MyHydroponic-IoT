@@ -33,7 +33,14 @@ void LCDDisplay::clear()
 void LCDDisplay::showData(const EnvData &data)
 {
     _datetime = "Time:" + _getShortTime(data.datetime);
-    _dataMessage = "PH: " + String(data.ph, 1) + ", TDS: " + String(data.tds, 0) + " ppm, Temp: " + String(data.temp, 2) + " C, MT: " + String(data.tankMain, 0) + " ml, Up: " + String(data.tankPhUp, 1) + " ml, Down: " + String(data.tankPhDown, 1) + " ml, A: " + String(data.tankA, 1) + " ml, B: " + String(data.tankB, 1) + " ml";
+    _dataMessage = "== Temp: " + String(data.temp, 2) + " C, " +
+                   "PH: " + String(data.ph, 1) + ", " +
+                   "TDS: " + String(data.tds, 0) + " ppm, " +
+                   "MT: " + String(data.tankMain, 0) + " ml, " +
+                   "Up: " + String(data.tankPhUp, 1) + " ml, " +
+                   "Down: " + String(data.tankPhDown, 1) + " ml, " +
+                   "A: " + String(data.tankA, 1) + " ml, " +
+                   "B: " + String(data.tankB, 1) + " ml  ===";
 
     _scrollPosition = 0;
     _lcd.clear();

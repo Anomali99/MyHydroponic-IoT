@@ -8,7 +8,7 @@ PHSensor::PHSensor(Adafruit_ADS1115 &ads, byte pin) : _ads(ads), _pin(pin)
 
 float PHSensor::readVoltage()
 {
-    int16_t adcValue = _ads.readADC_SingleEnded(_pin);
+    int16_t adcValue = _ads.readADC_Differential_0_1();
     float voltage = _ads.computeVolts(adcValue);
 
     return voltage;

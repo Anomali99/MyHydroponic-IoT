@@ -24,6 +24,7 @@ void MeasuringTank::setup()
 void MeasuringTank::loop()
 {
     static unsigned long lastKeepAlive = 0;
+    static unsigned long sampleIndex = 0;
     unsigned long now = millis();
 
     if (now - lastKeepAlive > 100)
@@ -69,6 +70,7 @@ void MeasuringTank::loop()
     case WAIT_STABLE:
         if (now - _lastTimeActivate >= _stabilizeDuration)
         {
+            sampleIndex = 0;
             _sampleData.clear();
             _lastTimeActivate = now;
             _statusState = READ_ENV;
@@ -76,7 +78,7 @@ void MeasuringTank::loop()
         break;
 
     case READ_ENV:
-        if (_sampleData.size() < _sampleCount)
+        if (sampleIndex < _sampleCount)
         {
             if (now - _lastTimeActivate >= 100)
             {
@@ -85,9 +87,13 @@ void MeasuringTank::loop()
                 data.ph = _phSensor.readPh();
                 data.tds = _tdsSensor.readTDS(data.temp);
 
-                _sampleData.push_back(data);
+                if (sampleIndex >= 10 || _sampleCount <= 10)
+                {
+                    _sampleData.push_back(data);
+                }
 
                 _lastTimeActivate = now;
+                sampleIndex++;
             }
         }
         else

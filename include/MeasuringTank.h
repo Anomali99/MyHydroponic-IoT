@@ -1,7 +1,6 @@
 #pragma once
 #include <Adafruit_MCP23X17.h>
 #include <vector>
-#include <algorithm>
 #include "PHSensor.h"
 #include "TDSSensor.h"
 #include "TemperatureSensor.h"
@@ -11,6 +10,7 @@ struct EnvironmentData
     float ph;
     float tds;
     float temp;
+    float phVolt;
 };
 
 enum MeasuringState
