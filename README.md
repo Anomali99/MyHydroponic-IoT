@@ -184,7 +184,7 @@ Gambar di bawah ini menunjukkan wiring keseluruhan antar komponen.
 
 ### 5. Konfigurasi ADS1115 (ADC) & Isolator Daya
 <div align="center">
-  <img src="/docs/Wiring Diagram 5.svg" alt="Wiring Diagram ADS1115" width="800px">
+  <img src="/docs/Wiring Diagram 4.svg" alt="Wiring Diagram ADS1115" width="800px">
 </div>
 
 
