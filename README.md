@@ -64,12 +64,16 @@ Perangkat ESP32 ini menggunakan beberapa topik MQTT untuk komunikasi dua arah de
 
 ### 1. Wiring Diagram Keseluruhan
 Gambar di bawah ini menunjukkan wiring keseluruhan antar komponen.
-![Wiring Diagram Utama](docs/Wiring Diagram.svg)
+<div align="center">
+  <img src="/docs/Wiring Diagram.svg" alt="Wiring Diagram Utama" width="800px">
+</div>
 
 ---
 
 ### 2. Konfigurasi Pin ESP32 (Microcontroller Utama)
-![Wiring Diagram ESP32](docs/Wiring Diagram 1.svg)
+<div align="center">
+  <img src="/docs/Wiring Diagram 1.svg" alt="Wiring Diagram ESP32" width="800px">
+</div>
 
 **Tabel Konfigurasi Pin ESP32**
 
@@ -120,7 +124,9 @@ Gambar di bawah ini menunjukkan wiring keseluruhan antar komponen.
 ---
 
 ### 3. Konfigurasi Logic Level Shifter
-![Wiring Diagram Logic Shifter](docs/Wiring Diagram 2.svg)
+<div align="center" >
+  <img src="/docs/Wiring Diagram 2.svg" alt="Wiring Diagram Logic Shifter" width="800px">
+</div>
 
 **Tabel Konfigurasi Pin Logic Shifter**
 
@@ -148,7 +154,9 @@ Gambar di bawah ini menunjukkan wiring keseluruhan antar komponen.
 ---
 
 ### 4. Konfigurasi MCP23017 (I/O Expander)
-![Wiring Diagram MCP23017](docs/Wiring Diagram 3.svg)
+<div align="center">
+  <img src="/docs/Wiring Diagram 3.svg" alt="Wiring Diagram MCP23017" width="800px">
+</div>
 
 **Tabel Konfigurasi Pin MCP23017**
 
@@ -175,7 +183,9 @@ Gambar di bawah ini menunjukkan wiring keseluruhan antar komponen.
 ---
 
 ### 5. Konfigurasi ADS1115 (ADC) & Isolator Daya
-![Wiring Diagram ADS1115](docs/Wiring Diagram 4.svg)
+<div align="center">
+  <img src="/docs/Wiring Diagram 5.svg" alt="Wiring Diagram ADS1115" width="800px">
+</div>
 
 
 **Tabel Konfigurasi Pin ADS1115 dan B0505S-1W**
